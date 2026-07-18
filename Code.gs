@@ -21,7 +21,7 @@ const APP_CONFIG = {
  * @return {HtmlOutput} 렌더링된 메인 페이지
  */
 function doGet(e) {
-  const template = HtmlService.createTemplateFromFile('Index');
+  const template = HtmlService.createTemplateFromFile('index');
 
   // 템플릿에서 <?= ?> 로 꺼내 쓸 수 있는 값들
   template.appTitle = APP_CONFIG.TITLE;
@@ -37,7 +37,7 @@ function doGet(e) {
 
 /**
  * HTML 파일 조각을 끼워 넣는 헬퍼.
- * Index.html 안에서 <?!= include('Step1'); ?> 형태로 호출합니다.
+ * index.html 안에서 <?!= include('Step1'); ?> 형태로 호출합니다.
  * 1~3단계와 교사 페이지를 별도 파일로 분리할 때 이 함수를 사용하세요.
  * @param {string} filename 확장자를 뺀 HTML 파일명
  * @return {string} 해당 파일의 HTML 문자열
