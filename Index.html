@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= appTitle ?></title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <!-- 서체 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+  <!-- ▼ 각 단계에서 필요한 외부 라이브러리(3D 뷰어 등)는 이 아래에 추가하세요 -->
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:      '#12203A',
+            slateq:   '#4A5A78',
+            paper:    '#F6F7F9',
+            bond:     '#1F7A8C',
+            lonepair: '#C2496B'
+          },
+          fontFamily: {
+            sans: ['Pretendard', 'system-ui', 'sans-serif'],
+            display: ['"Gowun Batang"', 'serif'],
+            mono: ['"IBM Plex Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { background-color: #F6F7F9; }
+
+    /* ---- 화면 전환 ---- */
+    .step-panel { display: none; }
+    .step-panel.is-active {
+      display: block;
+      animation: rise .28s cubic-bezier(.2,.7,.3,1) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ---- 콘텐츠 영역이 화면의 약 70%를 차지하도록 ---- */
+    /* 헤더(56px) + 스텝바(46px) + 푸터/여백을 뺀 나머지를 콘텐츠가 채움 */
+    .stage { min-height: calc(100vh - 150px); }
+    .panel-body { min-height: calc(70vh - 96px); }
+
+    /* ---- 스텝 바: 한 줄짜리 얇은 막대 ---- */
+    .step-btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .28rem .6rem; border-radius: 9999px;
+      color: #4A5A78; font-size: .8rem; line-height: 1.1;
+      transition: background-color .2s ease, color .2s ease;
+      white-space: nowrap;
+    }
+    .step-btn:hover { background: #EDF1F5; }
+    .step-dot {
+      width: 20px; height: 20px; border-radius: 9999px;
+      border: 2px solid #D3DAE4; background: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: .62rem; font-weight: 700; color: #8C99AD;
+      transition: all .2s ease;
+    }
+    .step-btn.done .step-dot   { border-color: #1F7A8C; color: #1F7A8C; }
+    .step-btn.current .step-dot{ border-color: #1F7A8C; background: #1F7A8C; color: #fff; }
+    .step-btn.current { color: #12203A; font-weight: 700; background: rgba(31,122,140,.09); }
+    .step-link {
+      flex: 0 0 auto; width: 22px; height: 2px; background: #E2E7EE; border-radius: 2px;
+    }
+    .step-link.filled { background: #1F7A8C; }
+
+    /* ---- 교사 모드 비밀 버튼 ---- */
+    .ghost-key { opacity: .3; transition: opacity .2s ease, color .2s ease; }
+    .ghost-key:hover, .ghost-key:focus-visible { opacity: 1; color: #C2496B; }
+
+    :focus-visible { outline: 3px solid #1F7A8C; outline-offset: 2px; border-radius: 6px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+    @media (max-width: 640px) {
+      .step-btn .step-text { display: none; }   /* 좁은 화면에선 번호만 */
+      .step-btn.current .step-text { display: inline; }
+      .panel-body { min-height: 60vh; }
+    }
+  </style>
+</head>
+
+<body class="font-sans text-ink antialiased">
+
+<!-- ============================================================
+     헤더 — 타이틀 + 학생 정보 + 교사 모드 진입
+     ============================================================ -->
+<header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3 justify-between">
+
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="w-8 h-8 rounded-lg bg-bond/10 text-bond flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-atom text-sm"></i>
+      </span>
+      <h1 class="font-display text-base sm:text-lg font-bold tracking-tight truncate"><?= appTitle ?></h1>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <!-- 입력 모드 -->
+      <div id="studentForm" class="flex items-center gap-1.5">
+        <label class="sr-only" for="inputStudentId">학번</label>
+        <input id="inputStudentId" type="text" inputmode="numeric" maxlength="5" placeholder="학번"
+               class="w-20 sm:w-24 px-2.5 py-1.5 text-sm rounded-lg border border-slate-300 focus:border-bond focus:ring-0 font-mono">
+        <label class="sr-only" for="inputStudentName">이름</label>
+        <input id="inputStudentName" type="text" maxlength="10" placeholder="이름"
+               class="w-20 px-2.5 py-1.5 text-sm rounded-lg border border-slate-300 focus:border-bond focus:ring-0">
+        <button id="btnSaveStudent" type="button"
+                class="px-2.5 py-1.5 text-sm rounded-lg bg-bond text-white font-semibold hover:bg-bond/90">
+          확인
+        </button>
+      </div>
+
+      <!-- 확인 완료 모드 -->
+      <div id="studentBadge" class="hidden items-center gap-2 pl-2.5 pr-1 py-1 rounded-full bg-bond/10 border border-bond/30">
+        <i class="fa-solid fa-id-card text-bond text-xs"></i>
+        <span class="text-sm">
+          <span id="badgeId" class="font-mono font-semibold"></span>
+          <span id="badgeName" class="font-semibold ml-1"></span>
+        </span>
+        <button id="btnEditStudent" type="button" title="학생 정보 수정"
+                class="w-6 h-6 rounded-full text-slateq hover:text-bond hover:bg-white">
+          <i class="fa-solid fa-pen text-[10px]"></i>
+        </button>
+      </div>
+
+      <button id="btnTeacher" type="button" title="교사 관리자 모드 (Shift+T)"
+              class="ghost-key w-8 h-8 rounded-lg text-slateq hover:bg-slate-100">
+        <i class="fa-solid fa-key text-sm"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     스텝 바 — 얇은 한 줄
+     ============================================================ -->
+<nav aria-label="학습 단계" class="bg-white border-b border-slate-200">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-11 flex items-center justify-center gap-1">
+    <button type="button" onclick="switchStep(1)" data-step="1" class="step-btn">
+      <span class="step-dot">1</span><span class="step-text">분자 구조 만들기</span>
+    </button>
+    <span class="step-link" data-link="1"></span>
+    <button type="button" onclick="switchStep(2)" data-step="2" class="step-btn">
+      <span class="step-dot">2</span><span class="step-text">구조 설명 기록</span>
+    </button>
+    <span class="step-link" data-link="2"></span>
+    <button type="button" onclick="switchStep(3)" data-step="3" class="step-btn">
+      <span class="step-dot">3</span><span class="step-text">교과서 편집·제출</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     메인 — 단계별 패널 (활성 패널만 표시)
+     각 단계 내용은 별도 HTML 파일에서 include 로 끼워 넣습니다.
+     ============================================================ -->
+<main class="stage max-w-5xl mx-auto px-4 sm:px-6 py-5">
+
+  <div id="guardNotice" class="hidden mb-3 flex items-start gap-2.5 p-3 rounded-lg bg-lonepair/10 border border-lonepair/30">
+    <i class="fa-solid fa-circle-exclamation text-lonepair mt-0.5 text-sm"></i>
+    <p class="text-sm">상단에 학번과 이름을 먼저 입력하세요. 입력한 정보는 모든 단계에서 함께 저장됩니다.</p>
+  </div>
+
+  <!-- 1단계 -->
+  <section id="step1" class="step-panel is-active" role="tabpanel" aria-label="1단계 분자 구조 만들기">
+    <?!= include('Step1'); ?>
+  </section>
+
+  <!-- 2단계 -->
+  <section id="step2" class="step-panel" role="tabpanel" aria-label="2단계 구조 설명 기록">
+    <?!= include('Step2'); ?>
+  </section>
+
+  <!-- 3단계 -->
+  <section id="step3" class="step-panel" role="tabpanel" aria-label="3단계 교과서 편집 및 제출">
+    <?!= include('Step3'); ?>
+  </section>
+
+  <!-- 교사 관리자 모드 -->
+  <section id="teacher" class="step-panel" role="tabpanel" aria-label="교사 관리자 모드">
+    <?!= include('Teacher'); ?>
+  </section>
+
+</main>
+
+<footer class="max-w-5xl mx-auto px-6 pb-6 flex items-center justify-between text-[11px] text-slateq">
+  <span>고등학교 화학 · 전자쌍 반발 이론(VSEPR)</span>
+  <span class="font-mono">v<?= appVersion ?> · <span id="serverStatus">서버 확인 중…</span></span>
+</footer>
+
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 hidden px-4 py-2.5 rounded-lg bg-ink text-white text-sm shadow-lg z-50"></div>
+
+<script>
+/* ==============================================================
+ *  전역 상태 — 모든 단계가 공유
+ *  Step1~3, Teacher 파일에서 그대로 AppState 를 참조하면 됩니다.
+ * ============================================================== */
+var AppState = {
+  studentId: '',
+  studentName: '',
+  verified: false,
+  currentStep: 1,
+  lastStudentStep: 1,
+  step1Data: null,
+  step2Data: null,
+  step3Data: null
+};
+
+var TOTAL_STEPS = 3;
+var TEACHER_PASSCODE = '0000';   // 실제 인증은 Code.gs 로 옮기는 것을 권장
+
+function persistState() {
+  try { sessionStorage.setItem('vsepr_state', JSON.stringify(AppState)); } catch (err) {}
+}
+function restoreState() {
+  try {
+    var raw = sessionStorage.getItem('vsepr_state');
+    if (raw) Object.assign(AppState, JSON.parse(raw));
+  } catch (err) {}
+}
+
+/* ==============================================================
+ *  화면 전환
+ * ============================================================== */
+function switchStep(step) {
+  var targetId = (step === 'teacher') ? 'teacher' : 'step' + step;
+  var target = document.getElementById(targetId);
+  if (!target) return;
+
+  if (step !== 'teacher' && Number(step) > 1 && !AppState.verified) {
+    document.getElementById('guardNotice').classList.remove('hidden');
+    showToast('학번과 이름을 먼저 입력하세요.');
+    document.getElementById('inputStudentId').focus();
+    return;
+  }
+
+  document.querySelectorAll('.step-panel').forEach(function (panel) {
+    panel.classList.remove('is-active');
+  });
+  target.classList.add('is-active');
+
+  AppState.currentStep = step;
+  if (step !== 'teacher') AppState.lastStudentStep = Number(step);
+  persistState();
+
+  updateStepBar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // 각 단계 파일이 정의한 진입 훅을 호출 (없으면 그냥 넘어감)
+  var hook = { 1: 'onEnterStep1', 2: 'onEnterStep2', 3: 'onEnterStep3', 'teacher': 'onEnterTeacher' }[step];
+  if (hook && typeof window[hook] === 'function') window[hook]();
+}
+
+function nextStep() {
+  var n = Number(AppState.lastStudentStep);
+  if (n < TOTAL_STEPS) switchStep(n + 1);
+}
+function prevStep() {
+  var n = Number(AppState.lastStudentStep);
+  if (n > 1) switchStep(n - 1);
+}
+
+function updateStepBar() {
+  var active = Number(AppState.lastStudentStep);
+  var isTeacher = (AppState.currentStep === 'teacher');
+
+  document.querySelectorAll('.step-btn').forEach(function (btn) {
+    var n = Number(btn.dataset.step);
+    btn.classList.remove('current', 'done');
+    if (!isTeacher && n === active) btn.classList.add('current');
+    else if (n < active) btn.classList.add('done');
+    btn.setAttribute('aria-current', (!isTeacher && n === active) ? 'step' : 'false');
+  });
+
+  document.querySelectorAll('.step-link').forEach(function (link) {
+    link.classList.toggle('filled', Number(link.dataset.link) < active);
+  });
+}
+
+/* ==============================================================
+ *  학생 정보
+ * ============================================================== */
+function saveStudent() {
+  var id = document.getElementById('inputStudentId').value.trim();
+  var name = document.getElementById('inputStudentName').value.trim();
+
+  if (!/^\d{4,5}$/.test(id)) { showToast('학번은 숫자 4~5자리입니다. 예) 10203'); return; }
+  if (name.length < 2) { showToast('이름을 두 글자 이상 입력하세요.'); return; }
+
+  AppState.studentId = id;
+  AppState.studentName = name;
+  AppState.verified = true;
+  persistState();
+
+  renderStudent();
+  document.getElementById('guardNotice').classList.add('hidden');
+  showToast(name + ' 학생, 확인되었습니다.');
+
+  // 서버 검증도 쓰려면 주석 해제
+  // google.script.run.withSuccessHandler(function(res){ if(!res.ok) showToast(res.message); })
+  //   .verifyStudent({ studentId: id, studentName: name });
+}
+
+function renderStudent() {
+  var form = document.getElementById('studentForm');
+  var badge = document.getElementById('studentBadge');
+
+  if (AppState.verified) {
+    document.getElementById('badgeId').textContent = AppState.studentId;
+    document.getElementById('badgeName').textContent = AppState.studentName;
+    form.classList.add('hidden');
+    badge.classList.remove('hidden');
+    badge.classList.add('flex');
+  } else {
+    document.getElementById('inputStudentId').value = AppState.studentId;
+    document.getElementById('inputStudentName').value = AppState.studentName;
+    badge.classList.add('hidden');
+    badge.classList.remove('flex');
+    form.classList.remove('hidden');
+  }
+  // 각 단계 파일에서 이름표를 갱신할 수 있도록 공용 훅 제공
+  document.querySelectorAll('[data-bind="studentName"]').forEach(function (el) {
+    el.textContent = AppState.studentName;
+  });
+  document.querySelectorAll('[data-bind="studentId"]').forEach(function (el) {
+    el.textContent = AppState.studentId;
+  });
+}
+
+function editStudent() {
+  AppState.verified = false;
+  persistState();
+  renderStudent();
+  document.getElementById('inputStudentId').focus();
+}
+
+/* ==============================================================
+ *  교사 모드
+ * ============================================================== */
+function openTeacher() {
+  var input = prompt('교사용 코드를 입력하세요.');
+  if (input === null) return;
+  if (input.trim() !== TEACHER_PASSCODE) { showToast('코드가 맞지 않습니다.'); return; }
+  switchStep('teacher');
+}
+
+/* ==============================================================
+ *  토스트
+ * ============================================================== */
+var toastTimer = null;
+function showToast(message) {
+  var el = document.getElementById('toast');
+  el.textContent = message;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.add('hidden'); }, 2400);
+}
+
+/* ==============================================================
+ *  초기화
+ * ============================================================== */
+document.addEventListener('DOMContentLoaded', function () {
+  restoreState();
+  renderStudent();
+
+  document.getElementById('btnSaveStudent').addEventListener('click', saveStudent);
+  document.getElementById('btnEditStudent').addEventListener('click', editStudent);
+  document.getElementById('btnTeacher').addEventListener('click', openTeacher);
+
+  ['inputStudentId', 'inputStudentName'].forEach(function (id) {
+    document.getElementById(id).addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') saveStudent();
+    });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+    if (!typing && e.shiftKey && (e.key === 'T' || e.key === 't')) openTeacher();
+  });
+
+  var start = '<?= startStep ?>';
+  switchStep(AppState.verified ? (Number(start) || AppState.lastStudentStep) : 1);
+  updateStepBar();
+
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function (res) {
+        document.getElementById('serverStatus').textContent = '서버 연결됨 ' + res.serverTime;
+      })
+      .withFailureHandler(function () {
+        document.getElementById('serverStatus').textContent = '서버 연결 실패';
+      })
+      .ping();
+  } else {
+    document.getElementById('serverStatus').textContent = '로컬 미리보기';
+  }
+});
+</script>
+</body>
+</html>

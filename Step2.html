@@ -1,0 +1,44 @@
+<!-- ==============================================================
+     Step2.html — 2단계: 구조 설명 기록
+     Index.html 의 <section id="step2"> 안에 include 됩니다.
+     ============================================================== -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+  <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2.5">
+      <span class="text-[10px] font-mono tracking-widest text-bond">STEP 02</span>
+      <h2 class="font-display text-lg font-bold">구조 설명 기록</h2>
+    </div>
+    <p class="hidden sm:block text-xs text-slateq">전자쌍 반발로 그 모양이 되는 이유를 씁니다</p>
+  </div>
+
+  <!-- ▼▼▼ 여기부터 2단계 콘텐츠 ▼▼▼ -->
+  <div class="panel-body px-5 py-5">
+
+    <div class="h-full min-h-[inherit] border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center py-20">
+      <i class="fa-solid fa-align-left text-4xl text-slate-300"></i>
+      <p class="mt-3 text-sm text-slateq">2단계 콘텐츠 자리 — 서술 입력창과 점검 항목</p>
+    </div>
+
+  </div>
+  <!-- ▲▲▲ 여기까지 2단계 콘텐츠 ▲▲▲ -->
+
+  <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-between">
+    <button type="button" onclick="prevStep()"
+            class="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slateq hover:bg-white">
+      <i class="fa-solid fa-arrow-left mr-1 text-xs"></i> 이전 단계
+    </button>
+    <button type="button" onclick="nextStep()"
+            class="px-4 py-2 rounded-lg bg-bond text-white text-sm font-semibold hover:bg-bond/90">
+      다음 단계 <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+/* 2단계 전용 스크립트 */
+function onEnterStep2() {
+  // 1단계 결과를 여기서 읽어 화면에 표시할 수 있습니다.
+  // if (AppState.step1Data) { ... }
+}
+</script>
