@@ -338,7 +338,7 @@ canvas{display:block;width:100%;height:100%}
         <div class="seg" id="pdMode" style="width:330px;flex:none;margin-bottom:14px"><button data-m="predict" class="on">예측 활동</button><button data-m="free">자유 탐구</button></div>
       </div>
       <div class="row" style="flex:1;gap:20px">
-        <div class="chart" style="width:600px;flex:none"><canvas id="wheelCanvas"></canvas></div>
+        <div class="chart" style="width:700px;flex:none"><canvas id="wheelCanvas"></canvas></div>
         <div class="card col" id="pdCard" style="flex:1;gap:12px;padding:18px 26px"></div>
       </div>
     </section>
@@ -535,7 +535,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v14 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v15 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -987,38 +987,38 @@ function miniWheel(cv, o) {
   function wheel() {
     if (!cv.clientWidth) return;
     const { ctx, w, h } = prep(cv);
-    const cx = w / 2, cy = h / 2 + 6, R = Math.min(w, h) / 2 - 78, r0 = R * 0.62;
+    const cx = w / 2, cy = h / 2 + 6, R = Math.min(w, h) / 2 - 92, r0 = R * 0.6;
     geo = { cx, cy, R, r0 };
     const ang = hu => (hu - 90) * Math.PI / 180;
     for (let a = 0; a < 360; a += 1) { ctx.beginPath(); ctx.arc(cx, cy, R, ang(a), ang(a + 1.3)); ctx.arc(cx, cy, r0, ang(a + 1.3), ang(a), true); ctx.closePath(); ctx.fillStyle = hsl(a); ctx.fill(); }
     // 스펙트럼에 없는 구간 표시
     ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = "#8a93a6"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(cx, cy, R + 8, ang(272), ang(348)); ctx.stroke(); ctx.restore();
-    ctx.fillStyle = "#8a93a6"; ctx.font = `15px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#8a93a6"; ctx.font = `18px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     const pt = (hu, rr) => [cx + Math.cos(ang(hu)) * rr, cy + Math.sin(ang(hu)) * rr];
-    let [tx, ty] = pt(310, R + 30); ctx.fillText("자홍: 스펙트럼에", tx - 8, ty - 9); ctx.fillText("없는 색", tx - 8, ty + 9);
+    let [tx, ty] = pt(312, R + 40); ctx.fillText("자홍: 스펙트럼에", tx, ty - 11); ctx.fillText("없는 색", tx, ty + 11);
     // 파장 눈금
-    ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 2; ctx.fillStyle = "#1b2234"; ctx.font = `bold 15px ${FONT}`;
-    [400, 450, 500, 550, 600, 650, 700].forEach(l => { const hu = lam2hue(l), [x1, y1] = pt(hu, R + 2), [x2, y2] = pt(hu, R + 12), [x3, y3] = pt(hu, R + 28);
+    ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 2; ctx.fillStyle = "#1b2234"; ctx.font = `bold 20px ${FONT}`;
+    [400, 450, 500, 550, 600, 650, 700].forEach(l => { const hu = lam2hue(l), [x1, y1] = pt(hu, R + 2), [x2, y2] = pt(hu, R + 14), [x3, y3] = pt(hu, R + 34);
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.fillText(l, x3, y3); });
     // 색 이름
     [["빨강", 0], ["주황", 30], ["노랑", 58], ["연두", 90], ["초록", 125], ["청록", 182], ["파랑", 228], ["보라", 268], ["자홍", 305]].forEach(([n, hu]) => {
-      const [x, y] = pt(hu, (R + r0) / 2); ctx.font = `bold 17px ${FONT}`; ctx.fillStyle = (hu > 40 && hu < 200) ? "#1b2234" : "#fff"; ctx.fillText(n, x, y); });
+      const [x, y] = pt(hu, (R + r0) / 2); ctx.font = `bold 23px ${FONT}`; ctx.fillStyle = (hu > 40 && hu < 200) ? "#1b2234" : "#fff"; ctx.fillText(n, x, y); });
     // 가운데: 용액 색
     let center, obsHue = null, absHue = null, predHue = null;
     if (st.mode === "free") { center = colorOf(l => 1.3 * gs(l, st.freeL, 32)); absHue = lam2hue(st.freeL); obsHue = (absHue + 180) % 360; }
     else { const s = SOLS[st.i]; center = s.color; obsHue = s.hue; if (st.pred != null) predHue = lam2hue(st.pred); if (st.revealed) absHue = lam2hue(s.lmax); }
     ctx.beginPath(); ctx.arc(cx, cy, r0 - 8, 0, 7); ctx.fillStyle = center; ctx.fill(); ctx.strokeStyle = "#cfd5e2"; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = "#1b2234"; ctx.font = `bold 17px ${FONT}`; ctx.fillText("용액의 색", cx, cy);
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 22px ${FONT}`; ctx.fillText("용액의 색", cx, cy);
     // 보색 안내선
     const guide = (h1, col) => { const [x1, y1] = pt(h1, R), [x2, y2] = pt(h1 + 180, R); ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore(); };
     if (st.mode === "free" || st.hint || st.revealed) guide(obsHue, "rgba(27,34,52,.55)");
-    const marker = (hu, fill, txt, bg, ring, inner) => { const [x, y] = pt(hu, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = ring || "#1b2234"; ctx.stroke(); ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
-      let [lx, ly] = pt(hu, inner ? r0 - 40 : R + 54); ctx.font = `bold 15px ${FONT}`; const hw = ctx.measureText(txt).width / 2 + 10;
-      lx = Math.max(hw + 4, Math.min(w - hw - 4, lx)); ly = Math.max(16, Math.min(h - 16, ly));
-      label(ctx, txt, lx, ly, { align: "center", bg, size: 15 }); };
+    const marker = (hu, fill, txt, bg, ring, inner) => { const [x, y] = pt(hu, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = ring || "#1b2234"; ctx.stroke(); ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
+      let [lx, ly] = pt(hu, inner ? r0 - 46 : R + 66); ctx.font = `bold 19px ${FONT}`; const hw = ctx.measureText(txt).width / 2 + 10;
+      lx = Math.max(hw + 4, Math.min(w - hw - 4, lx)); ly = Math.max(20, Math.min(h - 20, ly));
+      label(ctx, txt, lx, ly, { align: "center", bg, size: 19 }); };
     marker(obsHue, hsl(obsHue), "보이는 색", "#1b2234");
-    if (st.mode === "predict" && st.hint && !st.revealed) { const [x, y] = pt(obsHue + 180, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); }
+    if (st.mode === "predict" && st.hint && !st.revealed) { const [x, y] = pt(obsHue + 180, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); }
     if (predHue != null) marker(predHue, "rgba(255,255,255,.25)", `예측 ${Math.round(st.pred)} nm`, "#4338ca", "#4338ca", true);
     if (st.mode === "predict" && st.revealed) {
       const s = SOLS[st.i]; ctx.save(); ctx.lineCap = "butt";
