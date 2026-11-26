@@ -566,7 +566,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v6 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v7 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -1117,7 +1117,7 @@ document.getElementById("titleTubes").innerHTML =
 /* ================= 분광광도계 SVG ================= */
 const PARTS = [
   { k: "lamp", n: "광원", d: "텅스텐(할로젠) 램프(가시광선)나 중수소 램프(자외선)를 사용합니다. 여러 파장이 섞인 빛(백색광)을 냅니다." },
-  { k: "mono", n: "단색화 장치", d: "프리즘이나 회절격자로 백색광을 파장(색)별로 나눕니다. 장치를 회전시켜 원하는 파장을 고릅니다." },
+  { k: "mono", n: "단색화 장치", d: "프리즘이나 회절격자로 백색광을 빨강~보라의 파장(색)별로 나눕니다. 프리즘을 살짝 <b>회전</b>시키면 슬릿 가운데를 지나는 빛이 바뀝니다. 지금은 황산 구리 용액이 잘 흡수하는 <b>빨간빛</b>이 시료로 가도록 맞추는 중입니다." },
   { k: "slit", n: "슬릿", d: "좁은 틈으로 원하는 파장의 빛만 통과시켜 <b>단색광</b>을 만듭니다." },
   { k: "cuv", n: "시료 (큐벳)", d: "빛이 지나는 폭이 일정한(보통 1 cm) 투명한 용기입니다. 용액이 빛의 일부를 <b>흡수</b>합니다. 먼저 바탕 용액(용매)으로 기준(I₀)을 잡습니다." },
   { k: "det", n: "검출기", d: "시료를 통과한 빛의 세기(I)를 전기 신호로 바꿉니다. (광다이오드, 광전자 증배관 등)" },
@@ -1146,11 +1146,11 @@ function Instrument(host) {
     <rect x="72" y="${C + 40}" width="40" height="30" rx="4" fill="#94a3b8"/>
     ${lab(92, "광원", "백색광")}</g>
   <g class="part" data-p="1">${hl(285, 70, 160, 310)}
-    <polygon points="365,105 425,255 305,255" fill="rgba(186,230,253,.55)" stroke="#5b8db8" stroke-width="3"/>
+    <g class="prism"><polygon points="365,105 425,255 305,255" fill="rgba(186,230,253,.55)" stroke="#5b8db8" stroke-width="3"/></g>
     ${lab(365, "단색화 장치", "프리즘·회절격자")}</g>
   <g class="part" data-p="2">${hl(548, 70, 120, 310)}
-    <rect x="600" y="70" width="12" height="${C - 8 - 70}" fill="#475569"/>
-    <rect x="600" y="${C + 8}" width="12" height="${300 - C - 8}" fill="#475569"/>
+    <rect x="600" y="52" width="12" height="${C - 8 - 52}" fill="#475569"/>
+    <rect x="600" y="${C + 8}" width="12" height="${314 - C - 8}" fill="#475569"/>
     ${lab(606, "슬릿", "단색광 선택")}</g>
   <g class="part" data-p="3">${hl(728, 70, 152, 310)}
     <rect class="liq" x="776" y="140" width="56" height="128" fill="#c084fc"/>
@@ -1172,13 +1172,17 @@ function Instrument(host) {
   const parts = [...svg.querySelectorAll(".part")];
   return {
     update({ l, liq, T }) {
+      // 프리즘에서 나온 빛: 빨강(위) ~ 보라(아래)로 이어지는 띠. 슬릿 가운데(C)에 오는 파장이 l
       let fan = "";
-      for (let k = Math.max(LMIN, l - 150); k <= Math.min(LMAX, l + 150); k += 6) {
-        const y = C + (k - l) * 0.75; if (y < 75 || y > 300) continue;
-        fan += `<line x1="392" y1="${C}" x2="600" y2="${y.toFixed(1)}" stroke="${k > VIS_MAX ? "rgba(120,60,60,.35)" : wlColor(k, .85)}" stroke-width="3"/>`;
+      const kTop = Math.max(700, Math.min(LMAX, l + 40));
+      for (let k = 400; k <= kTop; k += 3) {
+        const y = C - (k - l) * 0.5; if (y < 54 || y > 312) continue;
+        fan += `<line x1="392" y1="${C}" x2="600" y2="${y.toFixed(1)}" stroke="${k > VIS_MAX ? "rgba(120,60,60,.3)" : wlColor(k, .9)}" stroke-width="3.5"/>`;
       }
-      fan += `<line x1="392" y1="${C}" x2="600" y2="${C}" stroke="${wlColor(l)}" stroke-width="5"/>`;
+      fan += `<line x1="392" y1="${C}" x2="606" y2="${C}" stroke="${wlColor(l)}" stroke-width="5"/>`;
       q(".fan").innerHTML = fan;
+      const tilt = Math.max(-12, Math.min(14, (l - 550) * 0.07));
+      q(".prism").setAttribute("transform", `rotate(${tilt.toFixed(2)} 365 205)`);
       const col = wlColor(l);
       q(".mono-beam").setAttribute("stroke", col);
       q(".in-cuv").setAttribute("stroke", wlColor(l, Math.max(.15, (1 + T) / 2)));
@@ -1206,14 +1210,25 @@ function Instrument(host) {
   steps.innerHTML = `<button data-s="-1">전체 보기</button>` + PARTS.map((p, i) => `<button data-s="${i}">${i + 1}. ${p.n}</button>`).join("") + `<button data-s="next" style="flex:.8;border-color:var(--accent-2);color:var(--accent)">다음 부품 ▶</button>`;
   steps.onclick = e => { const b = e.target.closest("button"); if (!b) return; set(b.dataset.s === "next" ? (step + 1 > 5 ? -1 : step + 1) : +b.dataset.s); };
   inst.onPart(set);
+  // 측정 기준: 황산 구리 용액, 빨간빛(650 nm)
+  const L_SET = 650, L_ZERO = 550, C_SAMPLE = 0.06;
+  const show = l => inst.update({ l, liq: solColor("cuso4", C_SAMPLE, 1), T: Math.pow(10, -absorb("cuso4", l, C_SAMPLE)) });
+  let anim = null;
+  function tiltAnim() {
+    cancelAnimationFrame(anim); show(L_ZERO);
+    const t0 = performance.now() + 700, dur = 2200;   // 기울지 않은 모습 잠시 보여 준 뒤 회전
+    const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const stepF = t => { const p = Math.max(0, Math.min(1, (t - t0) / dur)); show(L_ZERO + (L_SET - L_ZERO) * ease(p)); if (p < 1) anim = requestAnimationFrame(stepF); };
+    anim = requestAnimationFrame(stepF);
+  }
   function set(s) {
     step = s; inst.focus(s);
+    if (s === 1) tiltAnim(); else { cancelAnimationFrame(anim); show(L_SET); }
     [...steps.children].forEach(b => b.classList.toggle("on", b.dataset.s === String(s)));
     if (s < 0) ex.innerHTML = `<div class="num">💡</div><div><h3>빛의 경로</h3><p>광원의 백색광 → 단색화 장치에서 색별로 분리 → 슬릿으로 한 파장만 선택 → 시료가 일부 흡수 → 검출기가 남은 빛의 세기 측정 → 표시부에서 흡광도 계산</p></div>`;
     else ex.innerHTML = `<div class="num">${s + 1}</div><div><h3>${PARTS[s].n}</h3><p>${PARTS[s].d}</p></div>`;
   }
   set(-1);
-  inst.update({ l: 650, liq: solColor("cuso4", 0.06, 1), T: Math.pow(10, -absorb("cuso4", 650, 0.06)) });
 })();
 
 /* ================= 5. 시뮬레이션 ================= */
