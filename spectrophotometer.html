@@ -535,7 +535,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v12 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v13 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -1439,7 +1439,7 @@ function Instrument(host) {
     document.getElementById("blA").textContent = A.toFixed(3);
     document.getElementById("blT").textContent = (100 * T).toFixed(1) + "%";
     const cuv = document.getElementById("blCuv");
-    cuv.style.width = (b * 200) + "px"; cuv.style.background = solColor(k, c, 1);
+    cuv.style.width = Math.max(10, b * 42) + "px"; cuv.style.background = solColor(k, c, 1);  // 1 cm ≈ 42 px
     document.getElementById("blIn").style.background = col;
     document.getElementById("blOut").style.background = wlColor(s.lmax, Math.max(.03, T));
     const stops = []; for (let i = 0; i <= 10; i++) stops.push(`${wlColor(s.lmax, Math.max(.03, Math.pow(T, i / 10)))} ${i * 10}%`);
