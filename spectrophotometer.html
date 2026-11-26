@@ -331,6 +331,7 @@ canvas{display:block;width:100%;height:100%}
             </div>
             <div class="card" style="flex:1">
               <p id="wheelText" style="font-size:24px;line-height:1.6"></p>
+              <p class="muted" style="font-size:18px;margin-top:8px">※ 자홍은 무지개(스펙트럼)에 없는 색으로, 빨강과 파랑 빛이 섞여 보이는 색입니다. 초록빛을 흡수하는 용액이 자홍색으로 보입니다.</p>
               <div class="callout" style="margin-top:14px">그래서 분광광도계로 측정할 때는 <b>용액 색의 보색에 해당하는 파장</b> 근처의 빛을 사용합니다.</div>
             </div>
           </div>
@@ -563,7 +564,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v4 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v5 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -950,19 +951,20 @@ document.getElementById("titleTubes").innerHTML =
 /* ================= 4. 색상환 ================= */
 (function () {
   const SECT = [
-    { n: "빨강", c: "#e53935", r: "620~700" }, { n: "주황", c: "#fb8c00", r: "590~620" }, { n: "노랑", c: "#fdd835", r: "570~590" },
-    { n: "초록", c: "#43a047", r: "495~570" }, { n: "파랑", c: "#1e88e5", r: "450~495" }, { n: "보라", c: "#8e24aa", r: "400~450" }];
-  const OBS = { 0: "청록", 1: "파랑", 2: "보라", 3: "자주(보라)", 4: "주황", 5: "노랑(연두)" };
-  const idxOf = l => l < 450 ? 5 : l < 495 ? 4 : l < 570 ? 3 : l < 590 ? 2 : l < 620 ? 1 : 0;
+    // 빛의 삼원색 기준 색상환: 맞은편(보색) = 빨강↔청록, 노랑↔파랑, 초록↔자홍
+    { n: "빨강", c: "#e53935", r: "600~700" }, { n: "노랑·주황", c: "#fdd835", r: "570~600" }, { n: "초록", c: "#43a047", r: "510~570" },
+    { n: "청록", c: "#00bcd4", r: "480~510" }, { n: "파랑·보라", c: "#1e88e5", r: "400~480" }, { n: "자홍", c: "#c026d3", r: "빨강+파랑" }];
+  const idxOf = l => l < 480 ? 4 : l < 510 ? 3 : l < 570 ? 2 : l < 600 ? 1 : 0;
   const sl = document.getElementById("wheelL");
   const absFn = l0 => l => 1.3 * gs(l, l0, 32);
   function draw() {
     const l = +sl.value; document.getElementById("wheelOut").textContent = l + " nm";
     const col = colorOf(absFn(l)); document.getElementById("wheelBeaker").style.background = col;
     const ai = idxOf(l), oi = (ai + 3) % 6;
+    const tc = c => c === "#fdd835" ? "#a68a00" : c;
     document.getElementById("wheelText").innerHTML =
-      `이 용액은 <b style="color:${SECT[ai].c === "#fdd835" ? "#b59a00" : SECT[ai].c}">${SECT[ai].n}</b> 빛(약 ${l} nm)을 흡수합니다.<br>` +
-      `흡수되지 않은 나머지 빛이 섞여 <b>${OBS[ai]}</b> 계열의 색으로 보입니다.<br><span class="muted" style="font-size:20px">색상환에서 ${SECT[ai].n}의 맞은편 = ${SECT[oi].n}</span>`;
+      `이 용액은 <b style="color:${tc(SECT[ai].c)}">${SECT[ai].n}</b> 빛(약 ${l} nm)을 흡수합니다.<br>` +
+      `흡수되지 않은 나머지 빛이 섞여 <b style="color:${tc(SECT[oi].c)}">${SECT[oi].n}</b> 계열의 색으로 보입니다.<br><span class="muted" style="font-size:20px">흡수한 색(${SECT[ai].n})과 보이는 색(${SECT[oi].n})은 색상환의 맞은편 = <b>보색</b></span>`;
     const cv = document.getElementById("wheelCanvas"); if (!cv.clientWidth) return;
     const { ctx, w, h } = prep(cv);
     const cx = w / 2, cy = h / 2 + 4, R = Math.min(w, h) / 2 - 40, r0 = R * 0.42;
@@ -973,9 +975,9 @@ document.getElementById("titleTubes").innerHTML =
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
       if (i === ai || i === oi) { ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 5; ctx.stroke(); }
       const am = (a0 + a1) / 2, tr = (R + r0) / 2;
-      ctx.fillStyle = i === 2 ? "#5b4a00" : "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = (i === 1 || i === 3) ? "#3b3200" : "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = `bold 24px ${FONT}`; ctx.fillText(s.n, cx + Math.cos(am) * tr, cy + Math.sin(am) * tr - 10);
-      ctx.font = `15px ${FONT}`; ctx.fillText(s.r + " nm", cx + Math.cos(am) * tr, cy + Math.sin(am) * tr + 14);
+      ctx.font = `15px ${FONT}`; ctx.fillText(s.r + (i === 5 ? "" : " nm"), cx + Math.cos(am) * tr, cy + Math.sin(am) * tr + 14);
       if (i === ai || i === oi) {
         const tag = i === ai ? "흡수" : "보이는 색";
         const lx = cx + Math.cos(am) * (R + 22), ly = cy + Math.sin(am) * (R + 22);
