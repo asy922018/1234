@@ -43,6 +43,22 @@ select{font:inherit}
 .res-line{font-size:21px;line-height:1.6;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .res-sw{display:inline-block;width:34px;height:34px;border-radius:8px;border:2px solid #111;vertical-align:middle}
 
+.cmp-table{width:100%;border-collapse:collapse;font-size:18px}
+.cmp-table th{font-size:15px;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--line)}
+.cmp-table td{padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.cmp-table tr.pick td{background:var(--accent-soft)}
+.cmp-table tr.ans td{background:var(--good-soft);font-weight:800}
+.cmp-table .sw{display:inline-block;width:18px;height:18px;border-radius:5px;vertical-align:-3px;margin-right:6px;border:1px solid rgba(0,0,0,.2)}
+.pd-colors{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pd-colors button{display:flex;align-items:center;gap:6px;justify-content:center;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 4px;font-size:17px;font-weight:700}
+.pd-colors button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.pd-colors .dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.25)}
+.pd-step{font-size:17px;font-weight:800;color:var(--muted)}
+.pd-head{display:flex;gap:16px;align-items:center}
+.pd-beaker{width:88px;height:104px;border:4px solid #aab3c5;border-top:none;border-radius:0 0 18px 18px;position:relative;overflow:hidden;background:#fff;flex:none}
+.pd-beaker .liq{position:absolute;left:0;right:0;bottom:0;height:78%}
+#pdCard .pd-fb{font-size:17px;line-height:1.45;border-radius:12px;padding:8px 14px;flex-shrink:0}
+
 /* top bar */
 .topbar{height:58px;flex:none;display:flex;align-items:center;gap:16px;padding:0 28px;background:var(--panel);border-bottom:1px solid var(--line)}
 .topbar .brand{font-weight:800;font-size:20px;color:var(--accent);display:flex;align-items:center;gap:10px}
@@ -305,37 +321,23 @@ canvas{display:block;width:100%;height:100%}
       </div>
     </section>
 
-    <!-- 4. 빛의 색과 보색 -->
-    <section class="slide" data-title="흡수 파장과 보색" data-id="wheel">
-      <h2>흡수하는 빛의 파장과 용액의 색 <small>보색</small></h2>
-      <p class="lead">용액은 특정 색의 빛을 <b>흡수</b>하고, 나머지 빛이 우리 눈에 들어와 <b>보색</b>으로 보입니다.</p>
-      <div class="row" style="flex:1">
-        <div class="chart" style="width:520px;flex:none"><canvas id="wheelCanvas"></canvas></div>
-        <div class="col" style="flex:1">
-          <div class="card">
-            <div class="ctrl">
-              <label>흡수되는 빛의 파장 <output id="wheelOut">640 nm</output></label>
-              <input type="range" class="rainbow" id="wheelL" min="400" max="700" step="1" value="640" style="background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)">
-            </div>
-            <div class="btn-row" style="margin-top:6px">
-              <button class="btn soft" data-wl="640">CuSO₄ (빨강 흡수)</button>
-              <button class="btn soft" data-wls="kmno4"></button>
-              <button class="btn soft" data-wls="blue1"></button>
-              <button class="btn soft" data-wls="red40"></button>
-            </div>
-          </div>
-          <div class="row" style="gap:20px">
-            <div class="card" style="flex:none;width:300px;text-align:center">
-              <div class="beaker"><div class="liq" id="wheelBeaker"></div></div>
-              <p class="muted" style="margin-top:10px;font-size:18px">계산된 용액의 색</p>
-            </div>
-            <div class="card" style="flex:1">
-              <p id="wheelText" style="font-size:24px;line-height:1.6"></p>
-              <p class="muted" style="font-size:18px;margin-top:8px">※ 자홍은 무지개(스펙트럼)에 없는 색으로, 빨강과 파랑 빛이 섞여 보이는 색입니다. 초록빛을 흡수하는 용액이 자홍색으로 보입니다.</p>
-              <div class="callout" style="margin-top:14px">그래서 분광광도계로 측정할 때는 <b>용액 색의 보색에 해당하는 파장</b> 근처의 빛을 사용합니다.</div>
-            </div>
-          </div>
+    <!-- 4. 보색 예측 활동 -->
+    <section class="slide" data-title="흡수할 빛 예측하기" data-id="wheel">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+        <div>
+          <h2>용액의 색으로 흡수하는 빛 예측하기</h2>
+          <p class="lead" style="margin-bottom:12px">용액의 색을 보고 <b>보색 표</b>와 <b>색상환</b>에서 흡수할 빛의 색과 파장을 예측해 보세요.</p>
         </div>
+        <div class="seg" id="pdMode" style="width:330px;flex:none;margin-bottom:14px"><button data-m="predict" class="on">예측 활동</button><button data-m="free">자유 탐구</button></div>
+      </div>
+      <div class="row" style="flex:1;gap:20px">
+        <div class="chart" style="width:500px;flex:none"><canvas id="wheelCanvas"></canvas></div>
+        <div class="card" style="width:400px;flex:none;padding:14px 16px;display:flex;flex-direction:column">
+          <h3 style="font-size:22px;margin:0 0 8px">보색 표</h3>
+          <table class="cmp-table" id="cmpTable"></table>
+          <p class="muted" style="font-size:16px;margin:8px 2px 0;line-height:1.45">※ 자홍은 스펙트럼에 없는 색(빨강+파랑)입니다.<br>※ 경계 파장은 교재마다 조금씩 다릅니다.</p>
+        </div>
+        <div class="card col" id="pdCard" style="flex:1;gap:10px;padding:14px 20px"></div>
       </div>
     </section>
 
@@ -564,7 +566,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v5 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v6 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -948,50 +950,168 @@ document.getElementById("titleTubes").innerHTML =
   all();
 })();
 
-/* ================= 4. 색상환 ================= */
+/* ================= 4. 보색 예측 활동 · 연속 색상환 ================= */
 (function () {
-  const SECT = [
-    // 빛의 삼원색 기준 색상환: 맞은편(보색) = 빨강↔청록, 노랑↔파랑, 초록↔자홍
-    { n: "빨강", c: "#e53935", r: "600~700" }, { n: "노랑·주황", c: "#fdd835", r: "570~600" }, { n: "초록", c: "#43a047", r: "510~570" },
-    { n: "청록", c: "#00bcd4", r: "480~510" }, { n: "파랑·보라", c: "#1e88e5", r: "400~480" }, { n: "자홍", c: "#c026d3", r: "빨강+파랑" }];
-  const idxOf = l => l < 480 ? 4 : l < 510 ? 3 : l < 570 ? 2 : l < 600 ? 1 : 0;
-  const sl = document.getElementById("wheelL");
-  const absFn = l0 => l => 1.3 * gs(l, l0, 32);
-  function draw() {
-    const l = +sl.value; document.getElementById("wheelOut").textContent = l + " nm";
-    const col = colorOf(absFn(l)); document.getElementById("wheelBeaker").style.background = col;
-    const ai = idxOf(l), oi = (ai + 3) % 6;
-    const tc = c => c === "#fdd835" ? "#a68a00" : c;
-    document.getElementById("wheelText").innerHTML =
-      `이 용액은 <b style="color:${tc(SECT[ai].c)}">${SECT[ai].n}</b> 빛(약 ${l} nm)을 흡수합니다.<br>` +
-      `흡수되지 않은 나머지 빛이 섞여 <b style="color:${tc(SECT[oi].c)}">${SECT[oi].n}</b> 계열의 색으로 보입니다.<br><span class="muted" style="font-size:20px">흡수한 색(${SECT[ai].n})과 보이는 색(${SECT[oi].n})은 색상환의 맞은편 = <b>보색</b></span>`;
-    const cv = document.getElementById("wheelCanvas"); if (!cv.clientWidth) return;
-    const { ctx, w, h } = prep(cv);
-    const cx = w / 2, cy = h / 2 + 4, R = Math.min(w, h) / 2 - 40, r0 = R * 0.42;
-    SECT.forEach((s, i) => {
-      const a0 = -Math.PI / 2 - Math.PI / 6 + i * Math.PI / 3, a1 = a0 + Math.PI / 3;
-      ctx.beginPath(); ctx.arc(cx, cy, R, a0, a1); ctx.arc(cx, cy, r0, a1, a0, true); ctx.closePath();
-      ctx.fillStyle = s.c; ctx.globalAlpha = (i === ai || i === oi) ? 1 : 0.45; ctx.fill(); ctx.globalAlpha = 1;
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
-      if (i === ai || i === oi) { ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 5; ctx.stroke(); }
-      const am = (a0 + a1) / 2, tr = (R + r0) / 2;
-      ctx.fillStyle = (i === 1 || i === 3) ? "#3b3200" : "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.font = `bold 24px ${FONT}`; ctx.fillText(s.n, cx + Math.cos(am) * tr, cy + Math.sin(am) * tr - 10);
-      ctx.font = `15px ${FONT}`; ctx.fillText(s.r + (i === 5 ? "" : " nm"), cx + Math.cos(am) * tr, cy + Math.sin(am) * tr + 14);
-      if (i === ai || i === oi) {
-        const tag = i === ai ? "흡수" : "보이는 색";
-        const lx = cx + Math.cos(am) * (R + 22), ly = cy + Math.sin(am) * (R + 22);
-        label(ctx, tag, lx, ly, { align: "center", bg: i === ai ? "#c62828" : "#1b2234", size: 16 });
-      }
-    });
-    ctx.beginPath(); ctx.arc(cx, cy, r0 - 6, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = "#cfd5e2"; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = "#1b2234"; ctx.font = `bold 17px ${FONT}`; ctx.textAlign = "center"; ctx.fillText("보색", cx, cy);
+  // 흡수 파장 → 색상환 각도(색상). 교과서 보색 표와 맞춘 기준점 (맞은편 = 보이는 색)
+  const ANCH = [[400, 270], [435, 245], [480, 200], [510, 160], [530, 125], [570, 80], [585, 55], [605, 30], [650, 0], [700, -10]];
+  const lam2hue = l => { l = Math.max(400, Math.min(700, l)); for (let i = 0; i < ANCH.length - 1; i++) { const [l0, h0] = ANCH[i], [l1, h1] = ANCH[i + 1]; if (l <= l1) return (h0 + (h1 - h0) * (l - l0) / (l1 - l0) + 360) % 360; } return 350; };
+  const hue2lam = a => { let h = a > 350 ? a - 360 : a; if (h > 270) return null; for (let i = 0; i < ANCH.length - 1; i++) { const [l0, h0] = ANCH[i], [l1, h1] = ANCH[i + 1]; if (h <= h0 && h >= h1) return l0 + (l1 - l0) * (h0 - h) / (h0 - h1); } return null; };
+  const hsl = (h, l = 50) => `hsl(${h},95%,${l}%)`;
+  // 보색 표 (흡수하는 빛 → 보이는 색)
+  const ROWS = [
+    { ab: "보라", r: [400, 435], ob: "연두", oh: 90 }, { ab: "파랑", r: [435, 480], ob: "노랑", oh: 58 },
+    { ab: "청록", r: [480, 510], ob: "빨강", oh: 0 }, { ab: "초록", r: [510, 560], ob: "자홍", oh: 305 },
+    { ab: "연두", r: [560, 580], ob: "보라", oh: 268 }, { ab: "노랑", r: [580, 595], ob: "파랑", oh: 228 },
+    { ab: "주황", r: [595, 620], ob: "청록", oh: 195 }, { ab: "빨강", r: [620, 700], ob: "청록", oh: 182 }];
+  ROWS.forEach(r => r.ah = lam2hue((r.r[0] + r.r[1]) / 2));
+  const rowOf = l => ROWS.findIndex(r => l < r.r[1] || r === ROWS[ROWS.length - 1]);
+  // 예측할 용액들
+  const SOLS = [
+    { name: "황산 구리(Ⅱ) 수용액", A: l => absorb("cuso4", l, 0.1, 2.5), note: "실제 λmax ≈ 810 nm(근적외선) — 가시광선 중에서는 빨간빛을 가장 많이 흡수" },
+    { name: "과망가니즈산 칼륨(KMnO₄) 수용액", A: l => absorb("kmno4", l, 0.25, 1.5) },
+    { name: "식용색소 청색 1호", A: l => absorb("blue1", l, 5, 1.5) },
+    { name: "식용색소 적색 40호", A: l => absorb("red40", l, 25, 1.5) },
+    { name: "식용색소 황색 4호", A: l => 1.2 * gs(l, 427, 40) + 0.05 * gs(l, 360, 30) },
+  ];
+  SOLS.forEach(s => { s.color = colorOf(s.A); let m = 0, lm = 400; for (let l = 400; l <= 700; l++) { const v = s.A(l); if (v > m) { m = v; lm = l; } } s.vmax = m; s.lmax = lm;
+    const c = s.color.match(/\d+/g).map(v => v / 255), mx = Math.max(...c), mn = Math.min(...c), d = mx - mn;
+    let h = d < 1e-6 ? 0 : mx === c[0] ? ((c[1] - c[2]) / d) % 6 : mx === c[1] ? (c[2] - c[0]) / d + 2 : (c[0] - c[1]) / d + 4; s.hue = (h * 60 + 360) % 360; });
+  const st = { mode: "predict", i: 0, pred: null, revealed: false, hint: false, freeL: 640 };
+  const cv = document.getElementById("wheelCanvas"), card = document.getElementById("pdCard"), tbl = document.getElementById("cmpTable");
+  let geo = null;
+
+  function table() {
+    const sol = SOLS[st.i];
+    const pick = st.mode === "free" ? rowOf(st.freeL) : st.pred != null ? rowOf(st.pred) : -1;
+    const ans = st.mode === "predict" && st.revealed ? rowOf(sol.lmax) : -1;
+    tbl.innerHTML = `<tr><th>보이는 색</th><th>흡수하는 빛</th><th>흡수 파장 (nm)</th></tr>` + ROWS.map((r, k) =>
+      `<tr class="${k === ans ? "ans" : k === pick ? "pick" : ""}"><td><span class="sw" style="background:${hsl(r.oh)}"></span>${r.ob}</td><td><span class="sw" style="background:${hsl(r.ah)}"></span>${r.ab}</td><td>${r.r[0]}~${r.r[1]}</td></tr>`).join("");
   }
-  sl.addEventListener("input", draw);
-  document.querySelectorAll("[data-wls]").forEach(b => { const sm = SAMPLES[b.dataset.wls]; b.dataset.wl = sm.lmax; b.textContent = `${sm.short} (${sm.lmax} nm)`; });
-  sl.value = 640;
-  document.querySelectorAll("[data-wl]").forEach(b => b.onclick = () => { sl.value = b.dataset.wl; draw(); });
-  renderers.wheel = draw;
+  function wheel() {
+    if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv);
+    const cx = w / 2, cy = h / 2 + 6, R = Math.min(w, h) / 2 - 78, r0 = R * 0.62;
+    geo = { cx, cy, R, r0 };
+    const ang = hu => (hu - 90) * Math.PI / 180;
+    for (let a = 0; a < 360; a += 1) { ctx.beginPath(); ctx.arc(cx, cy, R, ang(a), ang(a + 1.3)); ctx.arc(cx, cy, r0, ang(a + 1.3), ang(a), true); ctx.closePath(); ctx.fillStyle = hsl(a); ctx.fill(); }
+    // 스펙트럼에 없는 구간 표시
+    ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = "#8a93a6"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, R + 8, ang(272), ang(348)); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = "#8a93a6"; ctx.font = `15px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const pt = (hu, rr) => [cx + Math.cos(ang(hu)) * rr, cy + Math.sin(ang(hu)) * rr];
+    let [tx, ty] = pt(310, R + 30); ctx.fillText("자홍: 스펙트럼에", tx - 8, ty - 9); ctx.fillText("없는 색", tx - 8, ty + 9);
+    // 파장 눈금
+    ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 2; ctx.fillStyle = "#1b2234"; ctx.font = `bold 15px ${FONT}`;
+    [400, 450, 500, 550, 600, 650, 700].forEach(l => { const hu = lam2hue(l), [x1, y1] = pt(hu, R + 2), [x2, y2] = pt(hu, R + 12), [x3, y3] = pt(hu, R + 28);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.fillText(l, x3, y3); });
+    // 색 이름
+    [["빨강", 0], ["주황", 30], ["노랑", 58], ["연두", 90], ["초록", 125], ["청록", 182], ["파랑", 228], ["보라", 268], ["자홍", 305]].forEach(([n, hu]) => {
+      const [x, y] = pt(hu, (R + r0) / 2); ctx.font = `bold 17px ${FONT}`; ctx.fillStyle = (hu > 40 && hu < 200) ? "#1b2234" : "#fff"; ctx.fillText(n, x, y); });
+    // 가운데: 용액 색
+    let center, obsHue = null, absHue = null, predHue = null;
+    if (st.mode === "free") { center = colorOf(l => 1.3 * gs(l, st.freeL, 32)); absHue = lam2hue(st.freeL); obsHue = (absHue + 180) % 360; }
+    else { const s = SOLS[st.i]; center = s.color; obsHue = s.hue; if (st.pred != null) predHue = lam2hue(st.pred); if (st.revealed) absHue = lam2hue(s.lmax); }
+    ctx.beginPath(); ctx.arc(cx, cy, r0 - 8, 0, 7); ctx.fillStyle = center; ctx.fill(); ctx.strokeStyle = "#cfd5e2"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 17px ${FONT}`; ctx.fillText("용액의 색", cx, cy);
+    // 보색 안내선
+    const guide = (h1, col) => { const [x1, y1] = pt(h1, R), [x2, y2] = pt(h1 + 180, R); ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore(); };
+    if (st.mode === "free" || st.hint || st.revealed) guide(obsHue, "rgba(27,34,52,.55)");
+    const marker = (hu, fill, txt, bg, ring, inner) => { const [x, y] = pt(hu, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = ring || "#1b2234"; ctx.stroke(); ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
+      let [lx, ly] = pt(hu, inner ? r0 - 40 : R + 54); ctx.font = `bold 15px ${FONT}`; const hw = ctx.measureText(txt).width / 2 + 10;
+      lx = Math.max(hw + 4, Math.min(w - hw - 4, lx)); ly = Math.max(16, Math.min(h - 16, ly));
+      label(ctx, txt, lx, ly, { align: "center", bg, size: 15 }); };
+    marker(obsHue, hsl(obsHue), "보이는 색", "#1b2234");
+    if (st.mode === "predict" && st.hint && !st.revealed) { const [x, y] = pt(obsHue + 180, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); }
+    if (predHue != null) marker(predHue, "rgba(255,255,255,.25)", `예측 ${Math.round(st.pred)} nm`, "#4338ca", "#4338ca", true);
+    if (absHue != null) marker(absHue, hsl(absHue), st.mode === "free" ? `흡수 ${st.freeL} nm` : `실제 흡수 ${SOLS[st.i].lmax >= 700 ? "700+" : SOLS[st.i].lmax} nm`, "#c62828", "#c62828");
+  }
+  function mini(c2) {
+    if (!c2 || !c2.clientWidth) return;
+    const { ctx, w, h } = prep(c2); const s = SOLS[st.i];
+    const box = { x: 54, y: 12, w: w - 70, h: h - 58 };
+    const ax = axes(ctx, box, [400, 700], [0, 1], { xStep: 50, yStep: 0.5, xOffset: 14, yFmt: v => v.toFixed(1) });
+    for (let l = 400; l < 700; l++) { ctx.fillStyle = wlColor(l); ctx.fillRect(ax.X(l), box.y + box.h + 2, ax.X(l + 1) - ax.X(l) + .6, 8); }
+    ctx.save(); ctx.font = `14px ${FONT}`; ctx.fillStyle = "#5a6478"; ctx.translate(16, box.y + box.h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.fillText("흡광도(상대)", 0, 0); ctx.restore();
+    if (st.revealed) {
+      ctx.beginPath(); ctx.moveTo(ax.X(400), ax.Y(0)); for (let l = 400; l <= 700; l++) ctx.lineTo(ax.X(l), ax.Y(s.A(l) / s.vmax)); ctx.lineTo(ax.X(700), ax.Y(0)); ctx.closePath(); ctx.fillStyle = "rgba(198,40,40,.10)"; ctx.fill();
+      strokeCurve(ctx, ax, l => s.A(l) / s.vmax, 400, 700, "#c62828", 3);
+      const x = ax.X(s.lmax); ctx.save(); ctx.setLineDash([6, 5]); ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore();
+    } else { ctx.fillStyle = "#8a93a6"; ctx.font = `17px ${FONT}`; ctx.textAlign = "center"; ctx.fillText("‘정답 확인’을 누르면 실제 흡수 스펙트럼이 나타납니다", box.x + box.w / 2, box.y + box.h / 2); }
+    if (st.pred != null) { const x = ax.X(st.pred); ctx.save(); ctx.strokeStyle = "#4338ca"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore(); label(ctx, "예측", x, box.y + 12, { align: "center", bg: "#4338ca", size: 13 }); }
+  }
+  function panel() {
+    if (st.mode === "free") {
+      const k = rowOf(st.freeL), r = ROWS[k];
+      card.innerHTML = `
+        <div class="ctrl"><label>흡수되는 빛의 파장 <output>${st.freeL} nm</output></label>
+          <input type="range" id="pdFreeL" min="400" max="700" step="1" value="${st.freeL}" style="background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)"></div>
+        <p class="muted" style="font-size:17px">색상환의 링을 직접 눌러도 됩니다.</p>
+        <div class="pd-head" style="gap:24px"><div class="pd-beaker" style="width:130px;height:150px"><div class="liq" style="background:${colorOf(l => 1.3 * gs(l, st.freeL, 32))}"></div></div>
+          <p style="font-size:22px;line-height:1.6;margin:0"><b>${r.ab}</b> 빛(약 ${st.freeL} nm)을 흡수하면<br>나머지 빛이 섞여 <b>${r.ob}</b> 계열로 보입니다.<br><span class="muted" style="font-size:18px">흡수한 색과 보이는 색은 색상환의 맞은편 = 보색</span></p></div>
+        <div class="callout" style="margin-top:auto">그래서 분광광도계로 측정할 때는 <b>용액 색의 보색에 해당하는 파장</b> 근처의 빛을 사용합니다.</div>`;
+      const fl = card.querySelector("#pdFreeL"); fl.oninput = () => { st.freeL = +fl.value; draw(); };
+      return;
+    }
+    const s = SOLS[st.i], tag = "ABCDE"[st.i];
+    const pk = st.pred != null ? rowOf(st.pred) : -1;
+    let fb = "";
+    if (st.revealed) {
+      const r = s.A(st.pred) / s.vmax, ok = r >= 0.7, near = r >= 0.35;
+      const ansRow = ROWS[rowOf(s.lmax)];
+      fb = `<div class="pd-fb ${ok ? "callout good" : near ? "callout" : "callout"}" style="${!near ? "background:var(--bad-soft);border-color:#f3b9b9" : ""}">
+        <b>${ok ? "⭕ 정답!" : near ? "🔺 아깝다! 거의 맞았어요." : "❌ 다시 생각해 봐요."}</b> 정체: <b>${s.name}</b><br>
+        실제로 가장 많이 흡수하는 빛: <b>${ansRow.ab}</b> (λ<sub>max</sub> ${s.lmax >= 700 ? "700 nm 이상" : "≈ " + s.lmax + " nm"}) · 예측 ${Math.round(st.pred)} nm
+        ${s.note ? `<br><span style="font-size:15px">${s.note}</span>` : ""}</div>`;
+    }
+    card.innerHTML = `
+      <div class="pd-head">
+        <div class="pd-beaker"><div class="liq" style="background:${s.color}"></div></div>
+        <div style="flex:1"><div style="font-size:26px;font-weight:800">용액 ${tag} <span class="muted" style="font-size:17px">(${st.i + 1} / ${SOLS.length})</span></div>
+          <div style="font-size:19px;margin-top:4px">이 용액은 어떤 색의 빛을 흡수할까?</div></div>
+        <button class="btn ghost" id="pdHint" style="flex:none">${st.hint ? "힌트 끄기" : "💡 힌트"}</button>
+      </div>
+      <div class="pd-step">① 흡수하는 빛의 색 고르기</div>
+      <div class="pd-colors">${ROWS.map((r, k) => `<button data-k="${k}" class="${k === pk ? "on" : ""}" ${st.revealed ? "disabled" : ""}><span class="dot" style="background:${hsl(r.ah)}"></span>${r.ab}</button>`).join("")}</div>
+      <div class="ctrl"><label class="pd-step" style="display:flex">② 흡수 파장 예측 <output style="margin-left:auto">${st.pred != null ? Math.round(st.pred) + " nm" : "-"}</output></label>
+        <input type="range" id="pdL" min="400" max="700" step="1" value="${st.pred ?? 550}" ${st.revealed ? "disabled" : ""} style="margin:4px 0;background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)"></div>
+      <div class="btn-row"><button class="btn" id="pdCheck" ${st.pred == null || st.revealed ? "disabled" : ""}>정답 확인</button>
+        <button class="btn ghost" id="pdRetry" ${st.revealed ? "" : "disabled"}>다시 풀기</button>
+        <button class="btn soft" id="pdNext" style="margin-left:auto">다음 용액 ▶</button></div>
+      <div class="chart" style="flex:1;min-height:90px;box-shadow:none"><canvas id="pdMini"></canvas></div>
+      ${fb}`;
+    card.querySelectorAll(".pd-colors button").forEach(b => b.onclick = () => { const r = ROWS[+b.dataset.k]; st.pred = Math.round((r.r[0] + r.r[1]) / 2); draw(); });
+    const sl = card.querySelector("#pdL"); sl.oninput = () => { st.pred = +sl.value; draw(true); };
+    card.querySelector("#pdHint").onclick = () => { st.hint = !st.hint; draw(); };
+    card.querySelector("#pdCheck").onclick = () => { st.revealed = true; draw(); };
+    card.querySelector("#pdRetry").onclick = () => { st.revealed = false; st.pred = null; draw(); };
+    card.querySelector("#pdNext").onclick = () => { st.i = (st.i + 1) % SOLS.length; st.pred = null; st.revealed = false; st.hint = false; draw(); };
+  }
+  function draw(sliderOnly) {
+    if (sliderOnly && st.mode === "predict") {
+      // 슬라이더 조작 중에는 패널을 다시 그리지 않고 필요한 부분만 갱신
+      const out = card.querySelector(".ctrl output"); if (out) out.textContent = Math.round(st.pred) + " nm";
+      const pk = rowOf(st.pred); card.querySelectorAll(".pd-colors button").forEach(b => b.classList.toggle("on", +b.dataset.k === pk));
+      const ck = card.querySelector("#pdCheck"); if (ck) ck.disabled = false;
+      table(); wheel(); mini(card.querySelector("#pdMini")); return;
+    }
+    table(); panel(); wheel(); mini(card.querySelector("#pdMini"));
+  }
+  // 색상환 링을 눌러 파장 선택
+  function pick(e) {
+    if (!geo) return; const p = evtPos(cv, e), dx = p.x - geo.cx, dy = p.y - geo.cy, d = Math.hypot(dx, dy);
+    if (d < geo.r0 - 10 || d > geo.R + 20) return;
+    const hu = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360, l = hue2lam(hu); if (l == null) return;
+    if (st.mode === "free") { st.freeL = Math.round(l); draw(); }
+    else if (!st.revealed) { st.pred = Math.round(l); draw(); }
+  }
+  let dragging = false;
+  cv.addEventListener("pointerdown", e => { dragging = true; cv.setPointerCapture?.(e.pointerId); pick(e); });
+  cv.addEventListener("pointermove", e => { if (dragging) pick(e); });
+  cv.addEventListener("pointerup", () => dragging = false);
+  cv.style.touchAction = "none"; cv.style.cursor = "pointer";
+  document.querySelectorAll("#pdMode button").forEach(b => b.onclick = () => { st.mode = b.dataset.m; document.querySelectorAll("#pdMode button").forEach(x => x.classList.toggle("on", x === b)); draw(); });
+  renderers.wheel = () => draw();
+  draw();
 })();
 
 /* ================= 분광광도계 SVG ================= */
