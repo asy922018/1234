@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>분광광도계와 정량분석</title>
+<style>
+:root{
+  --bg:#eef1f7; --panel:#ffffff; --ink:#1b2234; --muted:#5a6478; --line:#dce1eb;
+  --accent:#4338ca; --accent-2:#6366f1; --accent-soft:#eef0ff;
+  --good:#15803d; --good-soft:#e7f7ec; --bad:#c62828; --bad-soft:#fdecec; --warn:#b45309; --warn-soft:#fff5e6;
+  --shadow:0 6px 24px rgba(27,34,52,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#1b2234;
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Nanum Gothic",system-ui,sans-serif;color:var(--ink)}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center;background:var(--bg);
+  display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;cursor:pointer}
+select{font:inherit}
+
+/* top bar */
+.topbar{height:58px;flex:none;display:flex;align-items:center;gap:16px;padding:0 28px;background:var(--panel);border-bottom:1px solid var(--line)}
+.topbar .brand{font-weight:800;font-size:20px;color:var(--accent);display:flex;align-items:center;gap:10px}
+.topbar .brand i{display:inline-block;width:28px;height:12px;border-radius:6px;background:linear-gradient(90deg,#7c3aed,#2563eb,#06b6d4,#22c55e,#eab308,#f97316,#ef4444)}
+.topbar .sep{color:var(--line);font-size:22px}
+#slideTitle{font-size:20px;color:var(--muted);font-weight:600}
+.topbar .spacer{flex:1}
+.tbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 16px;font-size:17px;color:var(--ink)}
+.tbtn:hover{background:var(--accent-soft);border-color:var(--accent-2)}
+
+/* slides */
+#slides{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;padding:30px 56px 24px;display:none;flex-direction:column;animation:fade .35s ease}
+.slide.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.slide h2{margin:0 0 6px;font-size:42px;letter-spacing:-.5px}
+.slide h2 small{font-size:22px;color:var(--muted);font-weight:600;margin-left:14px}
+.lead{margin:0 0 18px;font-size:22px;color:var(--muted)}
+.row{display:flex;gap:28px;min-height:0}
+.col{display:flex;flex-direction:column;gap:16px;min-height:0}
+.col>.card,.col>.readouts,.col>.callout,.col>.btn,.col>.ctrl{flex-shrink:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 10px;font-size:26px}
+.card p,.card li{font-size:21px;line-height:1.55;margin:0}
+.card ul{margin:0;padding-left:24px}
+.card li+li{margin-top:6px}
+.muted{color:var(--muted)}
+.tag{display:inline-block;font-size:16px;font-weight:700;padding:4px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+b.hl{color:var(--accent)}
+.callout{border-radius:14px;padding:14px 20px;font-size:20px;line-height:1.5;background:var(--warn-soft);border:1px solid #f6d7a8}
+.callout.good{background:var(--good-soft);border-color:#b9e4c5}
+.callout.info{background:var(--accent-soft);border-color:#cfd3ff}
+
+/* controls */
+.ctrl{display:flex;flex-direction:column;gap:6px}
+.ctrl label{font-size:18px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+.ctrl label output{font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:6px;background:#dfe3ee;outline:none;margin:10px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:32px;height:32px;border-radius:50%;background:var(--accent);border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--accent);border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer}
+input.rainbow{background:linear-gradient(90deg,#6d28d9 0%,#2563eb 13%,#06b6d4 22%,#22c55e 31%,#eab308 40%,#f97316 48%,#dc2626 60%,#7f1d1d 77%,#6b6b6b 78%,#9ca3af 100%)}
+.sample-select{font-size:19px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;width:100%}
+.btn{border:none;border-radius:12px;padding:11px 18px;font-size:19px;font-weight:700;background:var(--accent);color:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.4;cursor:default;filter:none}
+.btn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent-2)}
+.btn.soft{background:var(--accent-soft);color:var(--accent)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+.seg{display:flex;border:2px solid var(--accent-2);border-radius:12px;overflow:hidden}
+.seg button{flex:1;border:none;background:#fff;color:var(--accent);font-size:18px;font-weight:700;padding:9px 10px}
+.seg button.on{background:var(--accent);color:#fff}
+.readouts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.ro{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;text-align:center}
+.ro .k{font-size:17px;color:var(--muted);font-weight:700}
+.ro .v{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums}
+.ro.em{border:2px solid var(--accent-2);background:var(--accent-soft)}
+.ro.em .v{color:var(--accent)}
+canvas{display:block;width:100%;height:100%}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+
+/* footer */
+.navbar{height:56px;flex:none;display:flex;align-items:center;gap:18px;padding:0 28px;background:var(--panel);border-top:1px solid var(--line)}
+.navbtn{border:none;background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:8px 20px;font-size:18px;font-weight:800}
+.navbtn:disabled{opacity:.35;cursor:default}
+#dots{flex:1;display:flex;gap:8px;justify-content:center}
+#dots button{width:14px;height:14px;border-radius:50%;border:none;background:#cfd5e2;padding:0}
+#dots button.on{background:var(--accent);width:36px;border-radius:7px}
+#pageNum{font-size:18px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
+
+/* toc */
+#toc{position:absolute;inset:58px 0 56px 0;background:rgba(27,34,52,.45);display:none;z-index:20}
+#toc.open{display:block}
+#toc .panel{position:absolute;right:28px;top:12px;width:440px;background:#fff;border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.25);padding:14px}
+#toc button{display:flex;width:100%;gap:14px;align-items:center;text-align:left;border:none;background:none;border-radius:10px;padding:10px 12px;font-size:19px}
+#toc button:hover{background:var(--accent-soft)}
+#toc button span{color:var(--muted);font-variant-numeric:tabular-nums;width:28px}
+#toc button.on{background:var(--accent-soft);color:var(--accent);font-weight:800}
+
+/* title slide */
+.title-slide{justify-content:center;align-items:flex-start;padding-left:120px;
+  background:radial-gradient(ellipse at 85% 30%,#e7e9ff 0,transparent 55%),radial-gradient(ellipse at 70% 90%,#e2f6ff 0,transparent 50%)}
+.title-slide .kicker{font-size:24px;font-weight:700;color:var(--accent);margin:0 0 10px}
+.title-slide h1{font-size:96px;margin:0;letter-spacing:-2px;line-height:1.1}
+.title-slide .sub{font-size:34px;color:var(--muted);margin:18px 0 40px}
+.title-slide .band{width:620px;height:18px;border-radius:9px;background:linear-gradient(90deg,#6d28d9,#2563eb,#06b6d4,#22c55e,#eab308,#f97316,#dc2626)}
+.title-slide .hint{position:absolute;bottom:30px;left:120px;font-size:19px;color:var(--muted)}
+.title-slide .hint kbd,.kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:3px;border-radius:6px;padding:1px 8px;background:#fff;font-family:inherit;font-size:17px}
+#titleTubes{position:absolute;right:120px;top:170px;display:flex;gap:26px;align-items:flex-end}
+
+/* tubes */
+.tube{width:64px;height:250px;position:relative;border:3px solid #b8c0d0;border-top:none;border-radius:0 0 32px 32px;background:rgba(255,255,255,.7);overflow:hidden}
+.tube .liq{position:absolute;left:0;right:0;bottom:0;height:72%;transition:background .3s}
+.tube .liq::after{content:"";position:absolute;left:8px;top:6px;bottom:20px;width:8px;border-radius:4px;background:rgba(255,255,255,.35)}
+.tube-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.tube-wrap .name{font-size:24px;font-weight:800}
+.tube-wrap .val{font-size:19px;color:var(--muted);height:26px;font-variant-numeric:tabular-nums}
+
+/* slide 2 */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.qa-grid .card .q{font-size:30px;font-weight:800;margin:6px 0 10px}
+
+/* instrument svg */
+.inst svg{width:100%;height:100%;display:block}
+.inst .part{transition:opacity .3s}
+.inst.focusing .part{opacity:.22}
+.inst.focusing .part.focus{opacity:1}
+.inst .hlbox{display:none}
+.inst .part.focus .hlbox{display:block}
+.inst .part{cursor:pointer}
+.steps{display:flex;gap:8px}
+.steps button{flex:1;border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 6px;font-size:18px;font-weight:700;color:var(--muted)}
+.steps button.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.part-explain{display:flex;gap:24px;align-items:flex-start}
+.part-explain .num{flex:none;width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.part-explain h3{font-size:30px;margin:0 0 6px}
+.part-explain p{font-size:22px;line-height:1.55;margin:0}
+
+/* cuvette (beer-lambert) */
+.bl-vis{display:flex;align-items:center;justify-content:center;height:130px;gap:0;position:relative}
+.bl-beam{height:44px;border-radius:4px}
+.bl-cuv{height:116px;border:4px solid #9aa4b8;border-radius:6px;position:relative;display:flex;align-items:center;transition:width .2s}
+.bl-cuv .inbeam{position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
+.bl-ruler{position:absolute;bottom:-4px;font-size:18px;color:var(--muted);font-weight:700}
+.formula{font-size:52px;font-weight:800;letter-spacing:1px;text-align:center;font-family:"Times New Roman",serif}
+.formula span{padding:0 8px;border-radius:10px;transition:background .3s}
+.formula span.pulse{background:#fff1b8}
+.terms{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:18px}
+.terms div{background:#f6f7fb;border-radius:10px;padding:8px 12px;line-height:1.4}
+.terms b{font-family:"Times New Roman",serif;font-size:24px}
+
+/* calibration */
+.cal-tubes{display:flex;gap:14px;justify-content:space-between}
+.cal-tube{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px solid transparent;border-radius:14px;padding:8px 4px;background:none;flex:1}
+.cal-tube:hover{background:var(--accent-soft)}
+.cal-tube.done{border-color:#b9e4c5;background:var(--good-soft)}
+.cal-tube .tube{width:42px;height:112px;border-radius:0 0 21px 21px}
+.cal-tube .lbl{font-size:16px;font-weight:800;white-space:nowrap}
+.cal-tube .a{font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums;height:20px}
+.cal-tube.unknown .lbl{color:var(--bad)}
+.result-table{width:100%;border-collapse:collapse;font-size:20px}
+.result-table td{padding:5px 4px;border-bottom:1px solid var(--line)}
+.result-table td:last-child{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* quiz */
+.quiz{max-width:1180px;margin:0 auto;width:100%}
+.quiz .qnum{font-size:20px;color:var(--accent);font-weight:800}
+.quiz .qtext{font-size:36px;font-weight:800;margin:8px 0 24px;line-height:1.35}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.opt{display:flex;gap:16px;align-items:center;text-align:left;border:2px solid var(--line);background:#fff;border-radius:16px;padding:18px 22px;font-size:25px}
+.opt:hover{border-color:var(--accent-2)}
+.opt .n{flex:none;width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800}
+.opt.correct{border-color:var(--good);background:var(--good-soft)}
+.opt.correct .n{background:var(--good);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .n{background:var(--bad);color:#fff}
+.explain{margin-top:22px;font-size:22px;min-height:80px}
+
+/* summary */
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.sum-grid .card{padding:20px 24px}
+.sum-grid .card h3{display:flex;align-items:center;gap:10px;font-size:24px}
+.sum-grid .card h3 .tag{font-size:15px}
+.flow{display:flex;align-items:center;gap:10px;margin-top:22px}
+.flow div{flex:1;background:var(--accent);color:#fff;border-radius:14px;padding:14px 10px;text-align:center;font-size:20px;font-weight:700}
+.flow i{font-style:normal;font-size:28px;color:var(--accent);font-weight:800}
+
+/* color wheel */
+.wheel-legend{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:18px}
+.wheel-legend div{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#f6f7fb}
+.sw{width:22px;height:22px;border-radius:6px;flex:none;border:1px solid rgba(0,0,0,.15)}
+.beaker{width:200px;height:220px;border:5px solid #aab3c5;border-top:none;border-radius:0 0 26px 26px;position:relative;overflow:hidden;background:#fff;margin:0 auto}
+.beaker .liq{position:absolute;left:0;right:0;bottom:0;height:75%;transition:background .2s}
+</style>
+</head>
+<body>
+<div id="stage">
+  <header class="topbar">
+    <div class="brand"><i></i>분광광도계와 정량분석</div>
+    <span class="sep">|</span>
+    <span id="slideTitle"></span>
+    <span class="spacer"></span>
+    <button class="tbtn" id="tocBtn">☰ 목차</button>
+    <button class="tbtn" id="fsBtn">⛶ 전체화면</button>
+  </header>
+
+  <main id="slides">
+
+    <!-- 1. 표지 -->
+    <section class="slide title-slide" data-title="표지" data-id="title">
+      <p class="kicker">고등학교 화학 · 정량분석</p>
+      <h1>빛으로<br>농도를 재다</h1>
+      <p class="sub">분광광도계의 원리와 흡수 스펙트럼</p>
+      <div class="band"></div>
+      <div id="titleTubes"></div>
+      <p class="hint"><span class="kbd">→</span> / <span class="kbd">Space</span> 다음 &nbsp; <span class="kbd">←</span> 이전 &nbsp; <span class="kbd">F</span> 전체화면 &nbsp; 화면의 슬라이더·버튼을 조작하며 수업을 진행하세요</p>
+    </section>
+
+    <!-- 2. 정량분석 -->
+    <section class="slide" data-title="정량분석이란?" data-id="quant">
+      <h2>정량분석이란?</h2>
+      <p class="lead">물질을 분석할 때 던지는 두 가지 질문</p>
+      <div class="row" style="flex:1">
+        <div class="col" style="flex:1.05">
+          <div class="qa-grid">
+            <div class="card">
+              <span class="tag">정성분석</span>
+              <div class="q">“무엇이 들어 있나?”</div>
+              <p class="muted">성분의 <b>종류</b>를 확인</p>
+              <p style="margin-top:8px">예: 불꽃 반응색, 앙금 생성 반응</p>
+            </div>
+            <div class="card" style="border:2px solid var(--accent-2)">
+              <span class="tag" style="background:var(--accent);color:#fff">정량분석</span>
+              <div class="q">“얼마나 들어 있나?”</div>
+              <p class="muted">성분의 <b>양·농도</b>를 숫자로 측정</p>
+              <p style="margin-top:8px">예: 혈당, 수질 검사, 음료 속 색소 양</p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>정량분석 방법의 예</h3>
+            <ul>
+              <li>질량 측정 (앙금의 질량) · 중화 적정 (부피 측정)</li>
+              <li><b class="hl">분광 분석</b> — 용액이 <b>빛을 흡수하는 정도</b>로 농도를 측정</li>
+            </ul>
+          </div>
+          <div class="callout info" id="quantMsg">오른쪽 시험관들을 보고, 진한 순서와 정확한 농도를 맞혀 보세요.</div>
+        </div>
+        <div class="card col" style="flex:1;align-items:center;justify-content:center">
+          <h3 style="align-self:flex-start">눈으로 농도를 맞힐 수 있을까?</h3>
+          <p class="muted" style="align-self:flex-start">KMnO₄ 수용액 5개 (순서는 무작위)</p>
+          <div id="quantTubes" style="display:flex;gap:26px;margin:24px 0 18px"></div>
+          <div class="btn-row">
+            <button class="btn" id="quantReveal">농도 공개</button>
+            <button class="btn ghost" id="quantShuffle">다시 섞기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 빛의 색과 보색 -->
+    <section class="slide" data-title="빛의 색과 보색" data-id="wheel">
+      <h2>용액은 왜 색을 띨까? <small>빛의 흡수와 보색</small></h2>
+      <p class="lead">용액은 특정 색의 빛을 <b>흡수</b>하고, 나머지 빛이 우리 눈에 들어와 <b>보색</b>으로 보입니다.</p>
+      <div class="row" style="flex:1">
+        <div class="chart" style="width:520px;flex:none"><canvas id="wheelCanvas"></canvas></div>
+        <div class="col" style="flex:1">
+          <div class="card">
+            <div class="ctrl">
+              <label>흡수되는 빛의 파장 <output id="wheelOut">525 nm</output></label>
+              <input type="range" class="rainbow" id="wheelL" min="400" max="700" step="1" value="525" style="background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)">
+            </div>
+            <div class="btn-row" style="margin-top:6px">
+              <button class="btn soft" data-wls="kmno4"></button>
+              <button class="btn soft" data-wls="blue1"></button>
+              <button class="btn soft" data-wls="red40"></button>
+              <button class="btn soft" data-wl="430">노란 용액 (430 nm)</button>
+            </div>
+          </div>
+          <div class="row" style="gap:20px">
+            <div class="card" style="flex:none;width:300px;text-align:center">
+              <div class="beaker"><div class="liq" id="wheelBeaker"></div></div>
+              <p class="muted" style="margin-top:10px;font-size:18px">계산된 용액의 색</p>
+            </div>
+            <div class="card" style="flex:1">
+              <p id="wheelText" style="font-size:24px;line-height:1.6"></p>
+              <div class="callout" style="margin-top:14px">그래서 분광광도계로 측정할 때는 <b>용액 색의 보색에 해당하는 파장</b> 근처의 빛을 사용합니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 분광광도계 구조 -->
+    <section class="slide" data-title="분광광도계의 구조" data-id="parts">
+      <h2>분광광도계의 구조</h2>
+      <p class="lead">빛의 경로를 따라 부품을 하나씩 살펴봅시다. (부품을 직접 클릭해도 됩니다)</p>
+      <div class="card inst" id="instParts" style="height:370px;padding:8px 14px"><svg viewBox="0 0 1480 380"></svg></div>
+      <div class="steps" id="partSteps" style="margin:16px 0"></div>
+      <div class="card part-explain" id="partExplain" style="flex:1"></div>
+    </section>
+
+    <!-- 5. 측정 시뮬레이션 -->
+    <section class="slide" data-title="투과도와 흡광도" data-id="sim">
+      <h2>측정해 보기 <small>투과도(T)와 흡광도(A)</small></h2>
+      <div class="card inst" id="instSim" style="height:330px;padding:6px 14px;margin-top:8px"><svg viewBox="0 0 1480 380"></svg></div>
+      <div class="row" style="margin-top:16px;flex:1">
+        <div class="card col" style="flex:1.15;gap:10px">
+          <div class="row" style="gap:20px">
+            <div class="ctrl" style="flex:1"><label>시료</label><select class="sample-select"></select></div>
+            <div class="ctrl" style="flex:1"><label>큐벳에 넣을 용액</label>
+              <div class="seg" id="simCuv"><button data-v="blank">바탕 용액(물)</button><button data-v="sample" class="on">시료 용액</button></div></div>
+          </div>
+          <div class="ctrl"><label>측정 파장 λ <output id="simLOut"></output></label>
+            <input type="range" class="rainbow" id="simL" min="380" max="900" step="1" value="500"></div>
+          <div class="row" style="gap:20px;align-items:flex-end">
+            <div class="ctrl" style="flex:1"><label>시료 농도 <output id="simCOut"></output></label>
+              <input type="range" id="simC" min="0" max="1" step="0.01" value="0.4"></div>
+            <button class="btn ghost" id="simToMax" style="margin-bottom:6px">λmax로 맞추기</button>
+          </div>
+        </div>
+        <div class="col" style="flex:1;gap:12px">
+          <div class="readouts">
+            <div class="ro"><div class="k">입사광 I₀</div><div class="v" id="roI0">100</div></div>
+            <div class="ro"><div class="k">투과광 I</div><div class="v" id="roI">-</div></div>
+            <div class="ro em"><div class="k">투과도 T</div><div class="v" id="roT">-</div></div>
+            <div class="ro em"><div class="k">흡광도 A</div><div class="v" id="roA">-</div></div>
+          </div>
+          <div class="card" style="padding:14px 22px">
+            <p style="font-size:24px;font-family:'Times New Roman',serif;text-align:center"><b>T</b> = I / I₀ &nbsp;&nbsp;&nbsp; <b>A</b> = −log T = log (I₀ / I)</p>
+            <p class="muted" style="font-size:19px;margin-top:6px" id="simNote"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 흡수 스펙트럼, λmax -->
+    <section class="slide" data-title="흡수 스펙트럼과 λmax" data-id="spec">
+      <h2>흡수 스펙트럼과 최대 흡수 파장 (λ<sub>max</sub>)</h2>
+      <p class="lead">파장을 바꿔 가며 흡광도를 측정하면 그 물질의 <b>흡수 스펙트럼</b>을 얻습니다.</p>
+      <div class="row" style="flex:1">
+        <div class="chart" style="flex:1"><canvas id="specCanvas"></canvas></div>
+        <div class="col" style="width:420px;flex:none">
+          <div class="card col" style="gap:12px">
+            <div class="ctrl"><label>시료</label><select class="sample-select"></select></div>
+            <div class="btn-row"><button class="btn" id="specScan" style="flex:1">▶ 파장 스캔</button><button class="btn ghost" id="specInstant">바로 보기</button></div>
+            <div class="readouts" style="grid-template-columns:1fr 1fr">
+              <div class="ro"><div class="k">파장 λ</div><div class="v" id="specRoL">-</div></div>
+              <div class="ro em"><div class="k">흡광도 A</div><div class="v" id="specRoA">-</div></div>
+            </div>
+          </div>
+          <div class="card" id="specInfo" style="flex:1">
+            <h3>왜 λ<sub>max</sub>에서 측정할까?</h3>
+            <ul>
+              <li><b>감도 최대</b>: 같은 농도 변화에도 흡광도 변화가 가장 큼</li>
+              <li><b>오차 최소</b>: 봉우리 꼭대기는 평평해서 파장이 조금 어긋나도 흡광도가 거의 같음</li>
+              <li>λ<sub>max</sub>는 물질마다 고유 → 물질 확인(정성분석)의 단서</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. 농도별 스펙트럼 -->
+    <section class="slide" data-title="농도별 흡수 스펙트럼" data-id="conc">
+      <h2>농도에 따른 흡수 스펙트럼 비교</h2>
+      <p class="lead">농도를 바꾸며 스펙트럼을 겹쳐 그려 보세요. 무엇이 변하고, 무엇이 변하지 않나요?</p>
+      <div class="row" style="flex:1">
+        <div class="chart" style="flex:1"><canvas id="concCanvas"></canvas></div>
+        <div class="col" style="width:420px;flex:none">
+          <div class="card col" style="gap:10px">
+            <div class="ctrl"><label>시료</label><select class="sample-select"></select></div>
+            <div class="ctrl"><label>농도 <output id="concOut"></output></label><input type="range" id="concC" min="0" max="1" step="0.01" value="0.4"></div>
+            <div class="row" style="gap:14px;align-items:center">
+              <div class="tube" style="width:42px;height:96px;border-radius:0 0 21px 21px;flex:none"><div class="liq" id="concTube"></div></div>
+              <div class="readouts" style="grid-template-columns:1fr;flex:1">
+                <div class="ro em"><div class="k">λ<sub>max</sub>에서의 흡광도</div><div class="v" id="concRoA">-</div></div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn" id="concAdd" style="flex:1">＋ 현재 스펙트럼 고정</button>
+            </div>
+            <div class="btn-row">
+              <button class="btn soft" id="concPreset" style="flex:1">표준 5개 농도</button>
+              <button class="btn ghost" id="concClear">지우기</button>
+            </div>
+            <button class="btn ghost" id="concReveal">관찰 포인트 보기</button>
+          </div>
+          <div class="callout good" id="concPoints" style="display:none;font-size:19px;padding:12px 18px">
+            ① 봉우리의 <b>위치(λ<sub>max</sub>)는 변하지 않는다</b><br>
+            ② 봉우리의 <b>높이(흡광도)는 농도에 비례</b>해 커진다<br>
+            ③ 스펙트럼의 <b>모양</b>은 같다 → 같은 물질
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. 람베르트-비어 -->
+    <section class="slide" data-title="람베르트–비어 법칙" data-id="beer">
+      <h2>람베르트–비어 법칙</h2>
+      <div class="row" style="flex:1;margin-top:8px">
+        <div class="col" style="flex:1.05">
+          <div class="card" style="padding:14px 22px">
+            <div class="formula"><span id="fA">A</span> = <span id="fE">ε</span> · <span id="fB">b</span> · <span id="fC">c</span></div>
+            <div class="terms">
+              <div><b>A</b><br>흡광도</div>
+              <div><b>ε</b><br>몰 흡광 계수 (물질·파장마다 고유)</div>
+              <div><b>b</b><br>빛이 지나는 길이 (큐벳 폭, cm)</div>
+              <div><b>c</b><br>몰 농도 (M)</div>
+            </div>
+          </div>
+          <div class="card" style="padding:12px 22px">
+            <div class="bl-vis" id="blVis">
+              <div class="bl-beam" id="blIn" style="width:140px"></div>
+              <div class="bl-cuv" id="blCuv"><div class="inbeam" id="blInBeam"></div></div>
+              <div class="bl-beam" id="blOut" style="width:140px"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:19px;font-weight:700;color:var(--muted);margin-top:4px">
+              <span>I₀ = 100</span><span id="blBLabel">b = 1.0 cm</span><span id="blILabel">I = </span>
+            </div>
+          </div>
+          <div class="card col" style="gap:4px;padding:14px 22px">
+            <div class="row" style="gap:20px;align-items:center">
+              <div style="flex:1.4"><select class="sample-select"></select></div>
+              <div style="flex:1;font-size:21px;font-weight:800" id="blLam"></div>
+            </div>
+            <div class="ctrl"><label>농도 c <output id="blCOut"></output></label><input type="range" id="blC" min="0" max="1" step="0.01" value="0.4"></div>
+            <div class="ctrl"><label>큐벳 폭 b <output id="blBOut"></output></label><input type="range" id="blB" min="0.2" max="2" step="0.1" value="1"></div>
+          </div>
+        </div>
+        <div class="col" style="flex:1">
+          <div class="readouts" style="grid-template-columns:repeat(3,1fr)">
+            <div class="ro"><div class="k">ε (λ<sub>max</sub>)</div><div class="v" id="blEps" style="font-size:26px">-</div></div>
+            <div class="ro em"><div class="k">흡광도 A</div><div class="v" id="blA">-</div></div>
+            <div class="ro em"><div class="k">투과도 T</div><div class="v" id="blT">-</div></div>
+          </div>
+          <div class="chart" style="flex:1"><canvas id="blCanvasA"></canvas></div>
+          <div class="chart" style="flex:1"><canvas id="blCanvasT"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. 검량선 -->
+    <section class="slide" data-title="검량선으로 농도 구하기" data-id="cal">
+      <h2>검량선(표준 곡선)으로 미지 시료의 농도 구하기</h2>
+      <p class="lead">① 표준 용액 측정(시험관 클릭) → ② 추세선 그리기 → ③ 미지 시료 측정 → ④ 농도 읽기 &nbsp;<span class="muted">(측정 파장: λ<sub>max</sub>)</span></p>
+      <div class="row" style="flex:1">
+        <div class="col" style="width:680px;flex:none">
+          <div class="card col" style="gap:12px;padding:18px 22px">
+            <div class="row" style="gap:16px;align-items:flex-end">
+              <div class="ctrl" style="flex:1"><label>시료</label><select class="sample-select"></select></div>
+              <button class="btn ghost" id="calReset">초기화</button>
+            </div>
+            <div class="cal-tubes" id="calTubes"></div>
+            <div class="btn-row">
+              <button class="btn soft" id="calAll">① 모두 측정</button>
+              <button class="btn" id="calFit">② 추세선 그리기</button>
+              <button class="btn" id="calUnknown">③ 미지 시료 측정</button>
+            </div>
+          </div>
+          <div class="card" style="flex:1;padding:12px 22px">
+            <table class="result-table">
+              <tr><td>검량선 식</td><td id="calEq">-</td></tr>
+              <tr><td>결정 계수 R²</td><td id="calR2">-</td></tr>
+              <tr><td>미지 시료의 흡광도</td><td id="calUA">-</td></tr>
+              <tr><td>④ 검량선으로 구한 농도</td><td id="calUC" style="color:var(--accent)">-</td></tr>
+            </table>
+            <div class="btn-row" style="margin-top:10px">
+              <button class="btn ghost" id="calReveal">실제 농도 확인</button>
+              <button class="btn ghost" id="calNew">새 미지 시료</button>
+              <span id="calTruth" style="font-size:20px;align-self:center;font-weight:700"></span>
+            </div>
+          </div>
+        </div>
+        <div class="chart" style="flex:1"><canvas id="calCanvas"></canvas></div>
+      </div>
+    </section>
+
+    <!-- 10. 퀴즈 -->
+    <section class="slide" data-title="확인 퀴즈" data-id="quiz">
+      <h2>확인 퀴즈</h2>
+      <div class="quiz" style="margin-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="qnum" id="qNum"></span>
+          <span class="tag" id="qScore"></span>
+        </div>
+        <div class="qtext" id="qText"></div>
+        <div class="opts" id="qOpts"></div>
+        <div class="explain" id="qExplain"></div>
+        <div class="btn-row" style="justify-content:space-between;margin-top:10px">
+          <button class="btn ghost" id="qPrev">◀ 이전 문제</button>
+          <button class="btn ghost" id="qReset">처음부터</button>
+          <button class="btn" id="qNext">다음 문제 ▶</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. 정리 -->
+    <section class="slide" data-title="정리" data-id="summary">
+      <h2>정리</h2>
+      <div class="sum-grid" style="margin-top:16px">
+        <div class="card"><h3><span class="tag">1</span>정량분석</h3><p>물질의 <b>양·농도</b>를 숫자로 측정하는 분석. 분광 분석은 빛의 흡수를 이용한다.</p></div>
+        <div class="card"><h3><span class="tag">2</span>색과 보색</h3><p>용액은 특정 색의 빛을 흡수하고 그 <b>보색</b>으로 보인다. (KMnO₄: 초록 흡수 → 보라)</p></div>
+        <div class="card"><h3><span class="tag">3</span>분광광도계</h3><p>광원 → 단색화 장치 → 슬릿 → 시료(큐벳) → 검출기 → 표시부</p></div>
+        <div class="card"><h3><span class="tag">4</span>T와 A</h3><p>T = I/I₀, &nbsp;A = −log T.<br>투과도가 작을수록 흡광도는 크다.</p></div>
+        <div class="card"><h3><span class="tag">5</span>λ<sub>max</sub></h3><p>흡광도가 가장 큰 파장. 농도가 변해도 위치는 그대로, <b>높이만 농도에 비례</b>.</p></div>
+        <div class="card"><h3><span class="tag">6</span>람베르트–비어 법칙</h3><p>A = εbc. 같은 조건에서 흡광도는 <b>농도에 비례</b> → 검량선이 직선.</p></div>
+      </div>
+      <div class="flow">
+        <div>표준 용액 준비</div><i>→</i><div>흡수 스펙트럼으로 λ<sub>max</sub> 결정</div><i>→</i><div>표준 용액 흡광도 측정 · 검량선</div><i>→</i><div>미지 시료 흡광도 측정</div><i>→</i><div>검량선에서 농도 읽기</div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="navbar">
+    <button class="navbtn" id="prevBtn">◀ 이전</button>
+    <div id="dots"></div>
+    <span id="pageNum"></span>
+    <button class="navbtn" id="nextBtn">다음 ▶</button>
+  </footer>
+  <div id="toc"><div class="panel" id="tocList"></div></div>
+</div>
+
+<script>
+"use strict";
+/* ================= 물리 모델 ================= */
+const LMIN = 380, LMAX = 900, VIS_MAX = 780;
+const gs = (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2);
+
+const SAMPLES = {
+  kmno4: { label: "과망가니즈산 칼륨 (KMnO₄)", short: "KMnO₄", unit: "mM", toM: 1e-3, cmax: 0.5, digits: 2, eps: 2400,
+    raw: l => 0.07*gs(l,640,45) + 0.30*gs(l,580,26) + 0.30*gs(l,525,42) + 0.36*gs(l,488,10) + 0.62*gs(l,507,10) + 0.88*gs(l,526,10) + 0.80*gs(l,546,10) + 0.40*gs(l,566,11) },
+  cuso4: { label: "황산 구리(Ⅱ) (CuSO₄)", short: "CuSO₄", unit: "M", toM: 1, cmax: 0.1, digits: 3, eps: 12,
+    raw: l => gs(l,810,125) },
+  blue1: { label: "식용색소 청색 1호", short: "청색 1호", unit: "µM", toM: 1e-6, cmax: 10, digits: 1, eps: 130000,
+    raw: l => 0.92*gs(l,630,23) + 0.28*gs(l,588,22) + 0.07*gs(l,410,25) },
+  red40: { label: "식용색소 적색 40호", short: "적색 40호", unit: "µM", toM: 1e-6, cmax: 50, digits: 1, eps: 25000,
+    raw: l => 0.85*gs(l,498,38) + 0.25*gs(l,538,24) },
+};
+for (const k in SAMPLES) {
+  const s = SAMPLES[k]; let m = 0, lm = 0;
+  for (let l = LMIN; l <= LMAX; l += 0.5) { const v = s.raw(l); if (v > m) { m = v; lm = l; } }
+  s.norm = m; s.lmax = Math.round(lm);
+  s.shape = l => s.raw(l) / s.norm;
+}
+// 흡광도 A(λ) = ε·shape(λ)·b·c
+function absorb(key, l, c, b = 1) { const s = SAMPLES[key]; return s.eps * s.shape(l) * c * s.toM * b; }
+function fmtC(key, c) { const s = SAMPLES[key]; return c.toFixed(s.digits) + " " + s.unit; }
+
+/* CIE 1931 등색 함수 근사 (Wyman et al. 2013) */
+const g2 = (x, m, s1, s2) => { const t = (x - m) / (x < m ? s1 : s2); return Math.exp(-0.5 * t * t); };
+const CMF = [];
+for (let l = 380; l <= 780; l += 5) CMF.push([l,
+  1.056*g2(l,599.8,37.9,31.0) + 0.362*g2(l,442.0,16.0,26.7) - 0.065*g2(l,501.1,20.4,26.2),
+  0.821*g2(l,568.8,46.9,40.5) + 0.286*g2(l,530.9,16.3,31.1),
+  1.217*g2(l,437.0,11.8,36.0) + 0.681*g2(l,459.0,26.0,13.8)]);
+function rgbLin(absFn) {
+  let X = 0, Y = 0, Z = 0;
+  for (const [l, x, y, z] of CMF) { const T = Math.pow(10, -absFn(l)); X += T*x; Y += T*y; Z += T*z; }
+  return [3.2406*X - 1.5372*Y - 0.4986*Z, -0.9689*X + 1.8758*Y + 0.0415*Z, 0.0557*X - 0.2040*Y + 1.0570*Z];
+}
+const WHITE = rgbLin(() => 0);
+const gam = v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055)); };
+function colorOf(absFn) { const c = rgbLin(absFn); return `rgb(${gam(c[0]/WHITE[0])},${gam(c[1]/WHITE[1])},${gam(c[2]/WHITE[2])})`; }
+function solColor(key, c, b = 1.5) { return colorOf(l => absorb(key, l, c, b)); }
+
+/* 파장 → 빛의 색 */
+function wlRGB(l) {
+  let r, g, b;
+  if (l < 440) { r = -(l - 440) / 60; g = 0; b = 1; }
+  else if (l < 490) { r = 0; g = (l - 440) / 50; b = 1; }
+  else if (l < 510) { r = 0; g = 1; b = -(l - 510) / 20; }
+  else if (l < 580) { r = (l - 510) / 70; g = 1; b = 0; }
+  else if (l < 645) { r = 1; g = -(l - 645) / 65; b = 0; }
+  else if (l <= VIS_MAX) { r = 1; g = 0; b = 0; }
+  else return [120, 40, 40];
+  let f = 1;
+  if (l < 420) f = 0.35 + 0.65 * (l - 380) / 40; else if (l > 700) f = 0.35 + 0.65 * (VIS_MAX - l) / 80;
+  return [r, g, b].map(v => Math.round(255 * Math.pow(v * f, 0.8)));
+}
+function wlColor(l, a = 1) { const [r, g, b] = wlRGB(l); return `rgba(${r},${g},${b},${a})`; }
+function colorName(l) {
+  if (l > VIS_MAX) return "근적외선(눈에 보이지 않음)";
+  return l < 450 ? "보라" : l < 495 ? "파랑" : l < 570 ? "초록" : l < 590 ? "노랑" : l < 620 ? "주황" : "빨강";
+}
+
+/* ================= 상태 ================= */
+const state = {
+  sample: "kmno4",
+  conc: { kmno4: 0.2, cuso4: 0.06, blue1: 5, red40: 25 },
+  simL: 500, simCuv: "sample",
+  traces: [],
+  b: 1,
+};
+const curS = () => SAMPLES[state.sample];
+
+/* ================= 캔버스 도우미 ================= */
+function prep(cv) {
+  const w = cv.clientWidth, h = cv.clientHeight, r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const pw = Math.max(1, Math.round(r.width * dpr)), ph = Math.max(1, Math.round(r.height * dpr));
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  const ctx = cv.getContext("2d"); ctx.setTransform(pw / w, 0, 0, ph / h, 0, 0); ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+function evtPos(cv, e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * cv.clientWidth, y: (e.clientY - r.top) / r.height * cv.clientHeight }; }
+function niceStep(range, n = 5) { const raw = range / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+function niceMax(v) { const st = niceStep(v, 5); return Math.ceil(v / st) * st; }
+const FONT = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif';
+
+function axes(ctx, box, xr, yr, o = {}) {
+  const X = v => box.x + (v - xr[0]) / (xr[1] - xr[0]) * box.w;
+  const Y = v => box.y + box.h - (v - yr[0]) / (yr[1] - yr[0]) * box.h;
+  const xs = o.xStep || niceStep(xr[1] - xr[0], 6), ys = o.yStep || niceStep(yr[1] - yr[0], 5);
+  ctx.save();
+  ctx.font = `16px ${FONT}`; ctx.fillStyle = "#5a6478"; ctx.strokeStyle = "#e6e9f0"; ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let v = yr[0]; v <= yr[1] + 1e-9; v += ys) {
+    const y = Math.round(Y(v)) + 0.5; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke();
+    ctx.fillText((o.yFmt || (t => +t.toFixed(3)))(v), box.x - 10, y);
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const xLabY = box.y + box.h + (o.xOffset || 8);
+  for (let v = Math.ceil(xr[0] / xs) * xs; v <= xr[1] + 1e-9; v += xs) {
+    const x = Math.round(X(v)) + 0.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke();
+    ctx.fillText((o.xFmt || (t => +t.toFixed(4)))(v), x, xLabY);
+  }
+  ctx.strokeStyle = "#8a93a6"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(box.x, box.y); ctx.lineTo(box.x, box.y + box.h); ctx.lineTo(box.x + box.w, box.y + box.h); ctx.stroke();
+  ctx.fillStyle = "#1b2234"; ctx.font = `bold 18px ${FONT}`;
+  if (o.xLabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(o.xLabel, box.x + box.w / 2, box.y + box.h + (o.xOffset || 8) + 48); }
+  if (o.yLabel) { ctx.save(); ctx.translate(box.x - 62, box.y + box.h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(o.yLabel, 0, 0); ctx.restore(); }
+  ctx.restore();
+  return { X, Y, ix: px => xr[0] + (px - box.x) / box.w * (xr[1] - xr[0]) };
+}
+
+/* 스펙트럼 축(무지개 띠 포함) */
+function spectrumFrame(ctx, w, h, ymax) {
+  const box = { x: 88, y: 24, w: w - 118, h: h - 112 };
+  const ax = axes(ctx, box, [LMIN, LMAX], [0, ymax], { xStep: 50, xOffset: 22, xLabel: "파장 λ (nm)", yLabel: "흡광도 A", yFmt: v => v.toFixed(niceStep(ymax) < 0.1 ? 2 : 1) });
+  // 근적외선 영역
+  ctx.fillStyle = "rgba(120,130,150,.07)"; ctx.fillRect(ax.X(VIS_MAX), box.y, ax.X(LMAX) - ax.X(VIS_MAX), box.h);
+  ctx.fillStyle = "#8a93a6"; ctx.font = `15px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("근적외선", (ax.X(VIS_MAX) + ax.X(LMAX)) / 2, box.y + 6);
+  // 무지개 띠
+  for (let l = LMIN; l < LMAX; l++) { ctx.fillStyle = l > VIS_MAX ? "#c9ced8" : wlColor(l); ctx.fillRect(ax.X(l), box.y + box.h + 3, ax.X(l + 1) - ax.X(l) + 0.6, 12); }
+  return { ...ax, box };
+}
+function strokeCurve(ctx, ax, fn, from, to, color, width, dash) {
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = "round"; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath();
+  for (let l = from; l <= to; l += 1) { const x = ax.X(l), y = ax.Y(fn(l)); l === from ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+  ctx.stroke(); ctx.restore();
+}
+function label(ctx, text, x, y, opt = {}) {
+  ctx.save(); ctx.font = `bold ${opt.size || 18}px ${FONT}`;
+  const tw = ctx.measureText(text).width, pad = 8, hgt = (opt.size || 18) + 12;
+  let bx = opt.align === "right" ? x - tw - pad * 2 : opt.align === "center" ? x - tw / 2 - pad : x;
+  ctx.fillStyle = opt.bg || "#1b2234"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, y - hgt / 2, tw + pad * 2, hgt, 8) : ctx.rect(bx, y - hgt / 2, tw + pad * 2, hgt); ctx.fill();
+  ctx.fillStyle = opt.fg || "#fff"; ctx.textBaseline = "middle"; ctx.textAlign = "left"; ctx.fillText(text, bx + pad, y + 1);
+  ctx.restore();
+}
+
+/* ================= 슬라이드 탐색 ================= */
+const slides = [...document.querySelectorAll(".slide")];
+const renderers = {};
+let cur = 0;
+const dots = document.getElementById("dots"), tocList = document.getElementById("tocList");
+slides.forEach((s, i) => {
+  const d = document.createElement("button"); d.title = s.dataset.title; d.onclick = () => go(i); dots.appendChild(d);
+  const t = document.createElement("button"); t.innerHTML = `<span>${i + 1}</span>${s.dataset.title}`; t.onclick = () => { go(i); toggleToc(false); }; tocList.appendChild(t);
+});
+function go(i) {
+  i = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.remove("active"); cur = i; slides[cur].classList.add("active");
+  [...dots.children].forEach((d, k) => d.classList.toggle("on", k === cur));
+  [...tocList.children].forEach((d, k) => d.classList.toggle("on", k === cur));
+  document.getElementById("slideTitle").textContent = slides[cur].dataset.title;
+  document.getElementById("pageNum").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prevBtn").disabled = cur === 0;
+  document.getElementById("nextBtn").disabled = cur === slides.length - 1;
+  history.replaceState(null, "", "#" + (cur + 1));
+  render();
+}
+function render() { const f = renderers[slides[cur].dataset.id]; if (f) requestAnimationFrame(() => f()); }
+function toggleToc(v) { document.getElementById("toc").classList.toggle("open", v); }
+document.getElementById("prevBtn").onclick = () => go(cur - 1);
+document.getElementById("nextBtn").onclick = () => go(cur + 1);
+document.getElementById("tocBtn").onclick = () => toggleToc(!document.getElementById("toc").classList.contains("open"));
+document.getElementById("toc").onclick = e => { if (e.target.id === "toc") toggleToc(false); };
+function toggleFs() { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); }
+document.getElementById("fsBtn").onclick = toggleFs;
+document.addEventListener("keydown", e => {
+  const t = e.target, inField = t.matches && t.matches("input,select,textarea");
+  if (e.key === "PageDown") { e.preventDefault(); go(cur + 1); return; }
+  if (e.key === "PageUp") { e.preventDefault(); go(cur - 1); return; }
+  if (inField) return;
+  if (e.key === "ArrowRight" || (e.key === " " && !(t.matches && t.matches("button")))) { e.preventDefault(); go(cur + 1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); go(cur - 1); }
+  else if (e.key === "Home") go(0);
+  else if (e.key === "End") go(slides.length - 1);
+  else if (e.key === "f" || e.key === "F") toggleFs();
+  else if (e.key === "Escape") toggleToc(false);
+});
+const stage = document.getElementById("stage");
+function fit() { const s = Math.min(innerWidth / 1600, innerHeight / 900); stage.style.transform = `translate(-50%,-50%) scale(${s})`; render(); }
+addEventListener("resize", fit);
+
+/* 시료 선택 동기화 */
+const selects = [...document.querySelectorAll(".sample-select")];
+selects.forEach(sel => {
+  for (const k in SAMPLES) { const o = document.createElement("option"); o.value = k; o.textContent = SAMPLES[k].label; sel.appendChild(o); }
+  sel.onchange = () => setSample(sel.value);
+});
+const sampleListeners = [];
+function setSample(k) {
+  state.sample = k; selects.forEach(s => s.value = k);
+  state.traces = [];
+  sampleListeners.forEach(f => f());
+  render();
+}
+// 농도 슬라이더(0~1 비율)를 시료 단위로
+function bindConc(id, outId, onChange) {
+  const el = document.getElementById(id), out = document.getElementById(outId);
+  const sync = () => { el.value = state.conc[state.sample] / curS().cmax; out.textContent = fmtC(state.sample, state.conc[state.sample]); };
+  el.addEventListener("input", () => { state.conc[state.sample] = +el.value * curS().cmax; out.textContent = fmtC(state.sample, state.conc[state.sample]); onChange && onChange(); });
+  sampleListeners.push(sync);
+  return sync;
+}
+const concSyncs = [];
+
+/* ================= 1. 표지 ================= */
+function tubeHTML(color, extra = "") { return `<div class="tube" ${extra}><div class="liq" style="background:${color}"></div></div>`; }
+document.getElementById("titleTubes").innerHTML =
+  [0.05, 0.1, 0.2, 0.3, 0.45].map((c, i) => `<div style="transform:translateY(${[0, -20, -6, -26, -10][i]}px)">${tubeHTML(solColor("kmno4", c, 2))}</div>`).join("");
+
+/* ================= 2. 정량분석 ================= */
+(function () {
+  const concs = [0.05, 0.1, 0.2, 0.3, 0.4];
+  let order = [], revealed = false;
+  const wrap = document.getElementById("quantTubes");
+  function shuffle() {
+    order = concs.slice(); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    revealed = false; draw();
+    document.getElementById("quantMsg").innerHTML = "오른쪽 시험관들을 보고, 진한 순서와 정확한 농도를 맞혀 보세요.";
+    document.getElementById("quantMsg").className = "callout info";
+  }
+  function draw() {
+    wrap.innerHTML = order.map((c, i) => `<div class="tube-wrap"><div class="name">${"ABCDE"[i]}</div>${tubeHTML(solColor("kmno4", c, 1.5))}<div class="val">${revealed ? c.toFixed(2) + " mM" : "? mM"}</div></div>`).join("");
+  }
+  document.getElementById("quantShuffle").onclick = shuffle;
+  document.getElementById("quantReveal").onclick = () => {
+    revealed = true; draw();
+    const m = document.getElementById("quantMsg");
+    m.className = "callout good";
+    m.innerHTML = "색의 진하기로 <b>순서</b>는 짐작할 수 있지만 <b>정확한 농도</b>는 알기 어렵습니다.<br>→ 빛이 얼마나 흡수되는지 <b>숫자로 측정</b>하자! = <b>분광광도계</b>";
+  };
+  shuffle();
+})();
+
+/* ================= 3. 색상환 ================= */
+(function () {
+  const SECT = [
+    { n: "빨강", c: "#e53935", r: "620~700" }, { n: "주황", c: "#fb8c00", r: "590~620" }, { n: "노랑", c: "#fdd835", r: "570~590" },
+    { n: "초록", c: "#43a047", r: "495~570" }, { n: "파랑", c: "#1e88e5", r: "450~495" }, { n: "보라", c: "#8e24aa", r: "400~450" }];
+  const OBS = { 0: "청록", 1: "파랑", 2: "보라", 3: "자주(보라)", 4: "주황", 5: "노랑(연두)" };
+  const idxOf = l => l < 450 ? 5 : l < 495 ? 4 : l < 570 ? 3 : l < 590 ? 2 : l < 620 ? 1 : 0;
+  const sl = document.getElementById("wheelL");
+  const absFn = l0 => l => 1.3 * gs(l, l0, 32);
+  function draw() {
+    const l = +sl.value; document.getElementById("wheelOut").textContent = l + " nm";
+    const col = colorOf(absFn(l)); document.getElementById("wheelBeaker").style.background = col;
+    const ai = idxOf(l), oi = (ai + 3) % 6;
+    document.getElementById("wheelText").innerHTML =
+      `이 용액은 <b style="color:${SECT[ai].c === "#fdd835" ? "#b59a00" : SECT[ai].c}">${SECT[ai].n}</b> 빛(약 ${l} nm)을 흡수합니다.<br>` +
+      `흡수되지 않은 나머지 빛이 섞여 <b>${OBS[ai]}</b> 계열의 색으로 보입니다.<br><span class="muted" style="font-size:20px">색상환에서 ${SECT[ai].n}의 맞은편 = ${SECT[oi].n}</span>`;
+    const cv = document.getElementById("wheelCanvas"); if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv);
+    const cx = w / 2, cy = h / 2 + 4, R = Math.min(w, h) / 2 - 40, r0 = R * 0.42;
+    SECT.forEach((s, i) => {
+      const a0 = -Math.PI / 2 - Math.PI / 6 + i * Math.PI / 3, a1 = a0 + Math.PI / 3;
+      ctx.beginPath(); ctx.arc(cx, cy, R, a0, a1); ctx.arc(cx, cy, r0, a1, a0, true); ctx.closePath();
+      ctx.fillStyle = s.c; ctx.globalAlpha = (i === ai || i === oi) ? 1 : 0.45; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
+      if (i === ai || i === oi) { ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 5; ctx.stroke(); }
+      const am = (a0 + a1) / 2, tr = (R + r0) / 2;
+      ctx.fillStyle = i === 2 ? "#5b4a00" : "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.font = `bold 24px ${FONT}`; ctx.fillText(s.n, cx + Math.cos(am) * tr, cy + Math.sin(am) * tr - 10);
+      ctx.font = `15px ${FONT}`; ctx.fillText(s.r + " nm", cx + Math.cos(am) * tr, cy + Math.sin(am) * tr + 14);
+      if (i === ai || i === oi) {
+        const tag = i === ai ? "흡수" : "보이는 색";
+        const lx = cx + Math.cos(am) * (R + 22), ly = cy + Math.sin(am) * (R + 22);
+        label(ctx, tag, lx, ly, { align: "center", bg: i === ai ? "#c62828" : "#1b2234", size: 16 });
+      }
+    });
+    ctx.beginPath(); ctx.arc(cx, cy, r0 - 6, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = "#cfd5e2"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 17px ${FONT}`; ctx.textAlign = "center"; ctx.fillText("보색", cx, cy);
+  }
+  sl.addEventListener("input", draw);
+  document.querySelectorAll("[data-wls]").forEach(b => { const sm = SAMPLES[b.dataset.wls]; b.dataset.wl = sm.lmax; b.textContent = `${sm.short} (${sm.lmax} nm)`; });
+  sl.value = SAMPLES.kmno4.lmax;
+  document.querySelectorAll("[data-wl]").forEach(b => b.onclick = () => { sl.value = b.dataset.wl; draw(); });
+  renderers.wheel = draw;
+})();
+
+/* ================= 분광광도계 SVG ================= */
+const PARTS = [
+  { k: "lamp", n: "광원", d: "텅스텐(할로젠) 램프(가시광선)나 중수소 램프(자외선)를 사용합니다. 여러 파장이 섞인 빛(백색광)을 냅니다." },
+  { k: "mono", n: "단색화 장치", d: "프리즘이나 회절격자로 백색광을 파장(색)별로 나눕니다. 장치를 회전시켜 원하는 파장을 고릅니다." },
+  { k: "slit", n: "슬릿", d: "좁은 틈으로 원하는 파장의 빛만 통과시켜 <b>단색광</b>을 만듭니다." },
+  { k: "cuv", n: "시료 (큐벳)", d: "빛이 지나는 폭이 일정한(보통 1 cm) 투명한 용기입니다. 용액이 빛의 일부를 <b>흡수</b>합니다. 먼저 바탕 용액(용매)으로 기준(I₀)을 잡습니다." },
+  { k: "det", n: "검출기", d: "시료를 통과한 빛의 세기(I)를 전기 신호로 바꿉니다. (광다이오드, 광전자 증배관 등)" },
+  { k: "disp", n: "표시부", d: "입사광(I₀)과 투과광(I)을 비교해 <b>투과도 T = I/I₀</b>와 <b>흡광도 A = −log T</b>를 계산해 보여 줍니다." },
+];
+function Instrument(host) {
+  const svg = host.querySelector("svg");
+  const C = 190;
+  const lab = (x, t, s) => `<text x="${x}" y="338" text-anchor="middle" font-size="26" font-weight="800" fill="#1b2234">${t}</text><text x="${x}" y="366" text-anchor="middle" font-size="18" fill="#5a6478">${s}</text>`;
+  const hl = (x, y, w, h) => `<rect class="hlbox" x="${x}" y="${y}" width="${w}" height="${h}" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/>`;
+  svg.innerHTML = `
+  <defs>
+    <radialGradient id="bulb${host.id}" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#fffbe0"/><stop offset=".6" stop-color="#ffe38a"/><stop offset="1" stop-color="#f6c343"/></radialGradient>
+    <linearGradient id="white${host.id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset=".25" stop-color="#60a5fa"/><stop offset=".5" stop-color="#86efac"/><stop offset=".75" stop-color="#fde047"/><stop offset="1" stop-color="#fca5a5"/></linearGradient>
+  </defs>
+  <g class="beams">
+    <rect x="130" y="${C - 7}" width="215" height="14" fill="url(#white${host.id})" opacity=".85"/>
+    <g class="fan"></g>
+    <line class="mono-beam" x1="612" y1="${C}" x2="772" y2="${C}" stroke-width="12" stroke-linecap="butt"/>
+    <line class="in-cuv" x1="772" y1="${C}" x2="836" y2="${C}" stroke-width="12"/>
+    <line class="out-beam" x1="836" y1="${C}" x2="1040" y2="${C}" stroke-width="12"/>
+  </g>
+  <g class="part" data-p="0">${hl(20, 70, 150, 310)}
+    <circle cx="92" cy="${C}" r="44" fill="url(#bulb${host.id})" stroke="#c59b1c" stroke-width="3"/>
+    <path d="M74 ${C + 6} l6 -14 l6 14 l6 -14 l6 14 l6 -14 l6 14" fill="none" stroke="#b45309" stroke-width="3"/>
+    <rect x="72" y="${C + 40}" width="40" height="30" rx="4" fill="#94a3b8"/>
+    ${lab(92, "광원", "백색광")}</g>
+  <g class="part" data-p="1">${hl(285, 70, 160, 310)}
+    <polygon points="365,105 425,255 305,255" fill="rgba(186,230,253,.55)" stroke="#5b8db8" stroke-width="3"/>
+    ${lab(365, "단색화 장치", "프리즘·회절격자")}</g>
+  <g class="part" data-p="2">${hl(548, 70, 120, 310)}
+    <rect x="600" y="70" width="12" height="${C - 8 - 70}" fill="#475569"/>
+    <rect x="600" y="${C + 8}" width="12" height="${300 - C - 8}" fill="#475569"/>
+    ${lab(606, "슬릿", "단색광 선택")}</g>
+  <g class="part" data-p="3">${hl(728, 70, 152, 310)}
+    <rect class="liq" x="776" y="140" width="56" height="128" fill="#c084fc"/>
+    <rect x="770" y="100" width="68" height="172" rx="5" fill="none" stroke="#7b8599" stroke-width="5"/>
+    <text x="804" y="292" text-anchor="middle" font-size="16" fill="#5a6478">b = 1 cm</text>
+    ${lab(804, "시료(큐벳)", "용액이 빛 흡수")}</g>
+  <g class="part" data-p="4">${hl(1000, 70, 170, 310)}
+    <rect x="1040" y="140" width="96" height="100" rx="12" fill="#334155"/>
+    <circle cx="1060" cy="${C}" r="16" fill="#0ea5e9" stroke="#e0f2fe" stroke-width="3"/>
+    <path d="M1136 ${C} H1214" stroke="#334155" stroke-width="4" stroke-dasharray="6 5"/>
+    ${lab(1088, "검출기", "빛의 세기 측정")}</g>
+  <g class="part" data-p="5">${hl(1200, 70, 270, 310)}
+    <rect x="1214" y="100" width="240" height="170" rx="16" fill="#0f172a"/>
+    <text class="dA" x="1334" y="165" text-anchor="middle" font-size="40" font-weight="800" fill="#4ade80" font-family="monospace">A 0.000</text>
+    <text class="dT" x="1334" y="208" text-anchor="middle" font-size="26" fill="#a5f3fc" font-family="monospace">T 100.0%</text>
+    <text class="dL" x="1334" y="245" text-anchor="middle" font-size="20" fill="#94a3b8" font-family="monospace">λ 500 nm</text>
+    ${lab(1334, "표시부", "T, A 계산")}</g>`;
+  const q = s => svg.querySelector(s);
+  const parts = [...svg.querySelectorAll(".part")];
+  return {
+    update({ l, liq, T }) {
+      let fan = "";
+      for (let k = Math.max(LMIN, l - 150); k <= Math.min(LMAX, l + 150); k += 6) {
+        const y = C + (k - l) * 0.75; if (y < 75 || y > 300) continue;
+        fan += `<line x1="392" y1="${C}" x2="600" y2="${y.toFixed(1)}" stroke="${k > VIS_MAX ? "rgba(120,60,60,.35)" : wlColor(k, .85)}" stroke-width="3"/>`;
+      }
+      fan += `<line x1="392" y1="${C}" x2="600" y2="${C}" stroke="${wlColor(l)}" stroke-width="5"/>`;
+      q(".fan").innerHTML = fan;
+      const col = wlColor(l);
+      q(".mono-beam").setAttribute("stroke", col);
+      q(".in-cuv").setAttribute("stroke", wlColor(l, Math.max(.15, (1 + T) / 2)));
+      q(".out-beam").setAttribute("stroke", wlColor(l, Math.max(.04, T)));
+      q(".out-beam").setAttribute("stroke-width", 4 + 8 * Math.sqrt(T));
+      q(".liq").setAttribute("fill", liq);
+      const A = -Math.log10(Math.max(T, 1e-6));
+      q(".dA").textContent = "A " + (A > 3 ? ">3.000" : A.toFixed(3));
+      q(".dT").textContent = "T " + (T * 100).toFixed(1) + "%";
+      q(".dL").textContent = "λ " + Math.round(l) + " nm";
+    },
+    focus(i) {
+      host.classList.toggle("focusing", i >= 0);
+      parts.forEach((p, k) => p.classList.toggle("focus", k === i));
+    },
+    onPart(f) { parts.forEach((p, k) => p.addEventListener("click", () => f(k))); },
+  };
+}
+
+/* ================= 4. 구조 단계별 ================= */
+(function () {
+  const inst = Instrument(document.getElementById("instParts"));
+  const steps = document.getElementById("partSteps"), ex = document.getElementById("partExplain");
+  let step = -1;
+  steps.innerHTML = `<button data-s="-1">전체 보기</button>` + PARTS.map((p, i) => `<button data-s="${i}">${i + 1}. ${p.n}</button>`).join("") + `<button data-s="next" style="flex:.8;border-color:var(--accent-2);color:var(--accent)">다음 부품 ▶</button>`;
+  steps.onclick = e => { const b = e.target.closest("button"); if (!b) return; set(b.dataset.s === "next" ? (step + 1 > 5 ? -1 : step + 1) : +b.dataset.s); };
+  inst.onPart(set);
+  function set(s) {
+    step = s; inst.focus(s);
+    [...steps.children].forEach(b => b.classList.toggle("on", b.dataset.s === String(s)));
+    if (s < 0) ex.innerHTML = `<div class="num">💡</div><div><h3>빛의 경로</h3><p>광원의 백색광 → 단색화 장치에서 색별로 분리 → 슬릿으로 한 파장만 선택 → 시료가 일부 흡수 → 검출기가 남은 빛의 세기 측정 → 표시부에서 흡광도 계산</p></div>`;
+    else ex.innerHTML = `<div class="num">${s + 1}</div><div><h3>${PARTS[s].n}</h3><p>${PARTS[s].d}</p></div>`;
+  }
+  set(-1);
+  inst.update({ l: 525, liq: solColor("kmno4", 0.2, 1), T: Math.pow(10, -absorb("kmno4", 525, 0.2)) });
+})();
+
+/* ================= 5. 시뮬레이션 ================= */
+(function () {
+  const inst = Instrument(document.getElementById("instSim"));
+  const sl = document.getElementById("simL");
+  function upd() {
+    const k = state.sample, l = state.simL, c = state.conc[k];
+    const blank = state.simCuv === "blank";
+    const A = blank ? 0 : absorb(k, l, c), T = Math.pow(10, -A);
+    inst.update({ l, liq: blank ? "#e8f3ff" : solColor(k, c, 1), T });
+    document.getElementById("simLOut").textContent = `${Math.round(l)} nm (${colorName(l)})`;
+    document.getElementById("roI").textContent = (100 * T).toFixed(1);
+    document.getElementById("roT").textContent = (100 * T).toFixed(1) + "%";
+    document.getElementById("roA").textContent = A > 3 ? ">3" : A.toFixed(3);
+    const s = curS();
+    document.getElementById("simNote").innerHTML = blank
+      ? "바탕 용액(물)은 빛을 흡수하지 않으므로 I = I₀ → T = 100%, A = 0. 이것이 측정의 기준(영점)입니다."
+      : `${s.short}의 λ<sub>max</sub>는 약 ${s.lmax} nm. 파장과 농도를 바꾸며 T와 A가 어떻게 변하는지 관찰하세요.`;
+  }
+  sl.addEventListener("input", () => { state.simL = +sl.value; upd(); });
+  concSyncs.push(bindConc("simC", "simCOut", upd));
+  document.getElementById("simToMax").onclick = () => { state.simL = curS().lmax; sl.value = state.simL; upd(); };
+  document.querySelectorAll("#simCuv button").forEach(b => b.onclick = () => {
+    state.simCuv = b.dataset.v; document.querySelectorAll("#simCuv button").forEach(x => x.classList.toggle("on", x === b)); upd();
+  });
+  renderers.sim = () => { sl.value = state.simL; upd(); };
+})();
+
+/* ================= 6. 흡수 스펙트럼 스캔 ================= */
+(function () {
+  const cv = document.getElementById("specCanvas");
+  let scanned = false, scanL = null, anim = null, hover = null;
+  const yMax = () => niceMax(absorb(state.sample, curS().lmax, state.conc[state.sample]) * 1.25);
+  function draw() {
+    if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv);
+    const k = state.sample, c = state.conc[k], s = curS();
+    const ax = spectrumFrame(ctx, w, h, yMax());
+    const f = l => absorb(k, l, c);
+    const end = scanned ? LMAX : scanL;
+    if (end != null && end > LMIN) {
+      // 곡선 아래 채우기
+      ctx.save(); ctx.beginPath(); ctx.moveTo(ax.X(LMIN), ax.Y(0));
+      for (let l = LMIN; l <= end; l++) ctx.lineTo(ax.X(l), ax.Y(f(l)));
+      ctx.lineTo(ax.X(end), ax.Y(0)); ctx.closePath(); ctx.fillStyle = "rgba(99,102,241,.10)"; ctx.fill(); ctx.restore();
+      strokeCurve(ctx, ax, f, LMIN, end, "#4338ca", 3.5);
+    }
+    if (!scanned && scanL != null) {
+      const x = ax.X(scanL), y = ax.Y(f(scanL));
+      ctx.strokeStyle = wlColor(scanL, .9); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, ax.box.y); ctx.lineTo(x, ax.box.y + ax.box.h); ctx.stroke();
+      ctx.fillStyle = wlColor(scanL); ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
+    }
+    if (scanned) {
+      const x = ax.X(s.lmax), y = ax.Y(f(s.lmax));
+      ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, ax.box.y + ax.box.h); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = "#c62828"; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill();
+      label(ctx, `λmax = ${s.lmax} nm`, x + 14, Math.max(ax.box.y + 18, y - 4), { bg: "#c62828", align: x > w - 260 ? "right" : "left" });
+      if (hover != null) {
+        const hx = ax.X(hover), hy = ax.Y(f(hover));
+        ctx.strokeStyle = "rgba(27,34,52,.35)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx, ax.box.y); ctx.lineTo(hx, ax.box.y + ax.box.h); ctx.stroke();
+        ctx.fillStyle = "#1b2234"; ctx.beginPath(); ctx.arc(hx, hy, 6, 0, 7); ctx.fill();
+      }
+    }
+    if (!scanned && scanL == null) {
+      ctx.fillStyle = "#8a93a6"; ctx.font = `22px ${FONT}`; ctx.textAlign = "center";
+      ctx.fillText("‘파장 스캔’을 눌러 380 nm부터 900 nm까지 흡광도를 측정해 보세요", ax.box.x + ax.box.w / 2, ax.box.y + ax.box.h / 2);
+    }
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 18px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText(`${s.short}  ${fmtC(k, c)}  ·  b = 1 cm`, ax.box.x + 12, ax.box.y + 8);
+    const show = scanned ? hover : scanL;
+    document.getElementById("specRoL").textContent = show != null ? Math.round(show) + " nm" : "-";
+    document.getElementById("specRoA").textContent = show != null ? f(show).toFixed(3) : "-";
+  }
+  function scan() {
+    cancelAnimationFrame(anim); scanned = false; hover = null; const t0 = performance.now(), dur = 4500;
+    const btn = document.getElementById("specScan"); btn.disabled = true;
+    const step = t => { const p = Math.min(1, (t - t0) / dur); scanL = LMIN + p * (LMAX - LMIN); draw();
+      if (p < 1) anim = requestAnimationFrame(step); else { scanned = true; scanL = null; btn.disabled = false; draw(); } };
+    anim = requestAnimationFrame(step);
+  }
+  document.getElementById("specScan").onclick = scan;
+  document.getElementById("specInstant").onclick = () => { cancelAnimationFrame(anim); scanned = true; scanL = null; document.getElementById("specScan").disabled = false; draw(); };
+  cv.addEventListener("mousemove", e => { if (!scanned) return; const p = evtPos(cv, e); const l = LMIN + (p.x - 88) / (cv.clientWidth - 118) * (LMAX - LMIN); hover = l >= LMIN && l <= LMAX ? l : null; draw(); });
+  cv.addEventListener("mouseleave", () => { hover = null; if (scanned) draw(); });
+  sampleListeners.push(() => { cancelAnimationFrame(anim); scanned = false; scanL = null; hover = null; document.getElementById("specScan").disabled = false; });
+  renderers.spec = draw;
+})();
+
+/* ================= 7. 농도별 스펙트럼 ================= */
+(function () {
+  const cv = document.getElementById("concCanvas");
+  const PAL = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#14b8a6", "#f97316", "#64748b"];
+  function draw() {
+    const k = state.sample, s = curS(), c = state.conc[k];
+    document.getElementById("concTube").style.background = solColor(k, c, 1.5);
+    document.getElementById("concRoA").textContent = absorb(k, s.lmax, c).toFixed(3);
+    if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv);
+    const ax = spectrumFrame(ctx, w, h, niceMax(absorb(k, s.lmax, s.cmax) * 1.08));
+    ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ax.X(s.lmax), ax.box.y); ctx.lineTo(ax.X(s.lmax), ax.box.y + ax.box.h); ctx.stroke(); ctx.restore();
+    label(ctx, `λmax ${s.lmax} nm`, ax.X(s.lmax), ax.box.y + 16, { bg: "#c62828", size: 16, align: "center" });
+    const sorted = state.traces.slice().sort((a, b) => b - a);
+    sorted.forEach((tc, i) => {
+      const col = PAL[state.traces.indexOf(tc) % PAL.length];
+      strokeCurve(ctx, ax, l => absorb(k, l, tc), LMIN, LMAX, col, 2.5);
+      const y = ax.Y(absorb(k, s.lmax, tc)); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ax.X(s.lmax), y, 6, 0, 7); ctx.fill();
+    });
+    strokeCurve(ctx, ax, l => absorb(k, l, c), LMIN, LMAX, "#1b2234", 4, [10, 6]);
+    // 범례
+    ctx.font = `bold 17px ${FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    let ly = ax.box.y + 18; const lx = s.lmax > 650 ? ax.box.x + 20 : ax.box.x + ax.box.w - 190;
+    const legend = [["현재", "#1b2234", c, true], ...state.traces.slice().sort((a, b) => a - b).map(tc => [fmtC(k, tc), PAL[state.traces.indexOf(tc) % PAL.length], tc])];
+    legend.forEach(([t, col, cc, dash]) => {
+      ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.setLineDash(dash ? [8, 5] : []); ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 34, ly); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#1b2234"; ctx.fillText(dash ? `현재 ${fmtC(k, cc)}` : t, lx + 44, ly); ly += 28;
+    });
+  }
+  concSyncs.push(bindConc("concC", "concOut", draw));
+  document.getElementById("concAdd").onclick = () => { const c = state.conc[state.sample]; if (!state.traces.some(t => Math.abs(t - c) < 1e-9)) state.traces.push(c); draw(); };
+  document.getElementById("concPreset").onclick = () => { const m = curS().cmax; state.traces = [0.2, 0.4, 0.6, 0.8, 1].map(f => +(f * m).toFixed(6)); draw(); };
+  document.getElementById("concClear").onclick = () => { state.traces = []; draw(); };
+  document.getElementById("concReveal").onclick = e => { const p = document.getElementById("concPoints"); const on = p.style.display === "none"; p.style.display = on ? "block" : "none"; e.target.textContent = on ? "관찰 포인트 숨기기" : "관찰 포인트 보기"; };
+  renderers.conc = draw;
+})();
+
+/* ================= 8. 람베르트-비어 ================= */
+(function () {
+  const cA = document.getElementById("blCanvasA"), cT = document.getElementById("blCanvasT");
+  const bSl = document.getElementById("blB");
+  let pulseT;
+  function pulse(ids) { clearTimeout(pulseT); ["fA", "fE", "fB", "fC"].forEach(i => document.getElementById(i).classList.toggle("pulse", ids.includes(i))); pulseT = setTimeout(() => ids.forEach(i => document.getElementById(i).classList.remove("pulse")), 700); }
+  function chart(cv, kind) {
+    if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv);
+    const k = state.sample, s = curS(), c = state.conc[k], b = state.b;
+    const box = { x: 86, y: 40, w: w - 116, h: h - 108 };
+    const ymaxA = niceMax(absorb(k, s.lmax, s.cmax, 2) * 1.02);
+    const ax = kind === "A"
+      ? axes(ctx, box, [0, s.cmax], [0, ymaxA], { xLabel: `농도 c (${s.unit})`, yLabel: "흡광도 A", xStep: s.cmax / 5 })
+      : axes(ctx, box, [0, s.cmax], [0, 100], { xLabel: `농도 c (${s.unit})`, yLabel: "투과도 T (%)", xStep: s.cmax / 5, yStep: 20 });
+    const fn = kind === "A" ? cc => absorb(k, s.lmax, cc, b) : cc => 100 * Math.pow(10, -absorb(k, s.lmax, cc, b));
+    ctx.save(); ctx.beginPath(); ctx.rect(box.x, box.y, box.w, box.h); ctx.clip();
+    ctx.strokeStyle = kind === "A" ? "#4338ca" : "#0e7490"; ctx.lineWidth = 3.5; ctx.beginPath();
+    for (let i = 0; i <= 200; i++) { const cc = s.cmax * i / 200; const x = ax.X(cc), y = ax.Y(fn(cc)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke(); ctx.restore();
+    const px = ax.X(c), py = ax.Y(fn(c));
+    ctx.save(); ctx.setLineDash([5, 5]); ctx.strokeStyle = "#8a93a6"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px, box.y + box.h); ctx.lineTo(px, py); ctx.lineTo(box.x, py); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = "#c62828"; ctx.beginPath(); ctx.arc(px, py, 8, 0, 7); ctx.fill();
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 19px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText(kind === "A" ? "흡광도는 농도에 비례 (직선)" : "투과도는 농도가 커질수록 지수적으로 감소", box.x + 12, 10);
+  }
+  function upd(src) {
+    const k = state.sample, s = curS(), c = state.conc[k], b = state.b;
+    const A = absorb(k, s.lmax, c, b), T = Math.pow(10, -A), col = wlColor(s.lmax);
+    document.getElementById("blLam").textContent = `λmax = ${s.lmax} nm`;
+    document.getElementById("blBOut").textContent = b.toFixed(1) + " cm";
+    document.getElementById("blBLabel").textContent = `b = ${b.toFixed(1)} cm`;
+    document.getElementById("blILabel").textContent = `I = ${(100 * T).toFixed(1)}`;
+    document.getElementById("blEps").innerHTML = `${s.eps.toLocaleString()} <span style="font-size:14px">M⁻¹cm⁻¹</span>`;
+    document.getElementById("blA").textContent = A.toFixed(3);
+    document.getElementById("blT").textContent = (100 * T).toFixed(1) + "%";
+    const cuv = document.getElementById("blCuv");
+    cuv.style.width = (b * 200) + "px"; cuv.style.background = solColor(k, c, 1);
+    document.getElementById("blIn").style.background = col;
+    document.getElementById("blOut").style.background = wlColor(s.lmax, Math.max(.03, T));
+    const stops = []; for (let i = 0; i <= 10; i++) stops.push(`${wlColor(s.lmax, Math.max(.03, Math.pow(T, i / 10)))} ${i * 10}%`);
+    document.getElementById("blInBeam").style.background = `linear-gradient(90deg,${stops.join(",")})`;
+    if (src) pulse(src);
+    chart(cA, "A"); chart(cT, "T");
+  }
+  concSyncs.push(bindConc("blC", "blCOut", () => upd(["fA", "fC"])));
+  bSl.addEventListener("input", () => { state.b = +bSl.value; upd(["fA", "fB"]); });
+  renderers.beer = () => { bSl.value = state.b; upd(); };
+})();
+
+/* ================= 9. 검량선 ================= */
+(function () {
+  const cv = document.getElementById("calCanvas");
+  const FR = [0.2, 0.4, 0.6, 0.8, 1.0];
+  let cal;
+  const rnd = () => (Math.random() - 0.5) * 2;
+  function reset(keepUnknown) {
+    const m = curS().cmax;
+    const u = keepUnknown && cal ? cal.uc : +(m * (0.12 + Math.random() * 0.8)).toPrecision(2);
+    cal = { measured: FR.map(() => false), noise: FR.map(() => rnd() * 0.012), fit: null, uMeasured: false, uc: u, un: rnd() * 0.01, reveal: false };
+    upd();
+  }
+  const stdC = i => FR[i] * curS().cmax;
+  const stdA = i => absorb(state.sample, curS().lmax, stdC(i)) + cal.noise[i];
+  const uA = () => absorb(state.sample, curS().lmax, cal.uc) + cal.un;
+  function regress() {
+    const pts = FR.map((_, i) => [stdC(i), stdA(i)]).filter((_, i) => cal.measured[i]);
+    const n = pts.length, sx = pts.reduce((a, p) => a + p[0], 0), sy = pts.reduce((a, p) => a + p[1], 0);
+    const sxx = pts.reduce((a, p) => a + p[0] * p[0], 0), sxy = pts.reduce((a, p) => a + p[0] * p[1], 0);
+    const m = (n * sxy - sx * sy) / (n * sxx - sx * sx), b0 = (sy - m * sx) / n, my = sy / n;
+    const ssr = pts.reduce((a, p) => a + (p[1] - (m * p[0] + b0)) ** 2, 0), sst = pts.reduce((a, p) => a + (p[1] - my) ** 2, 0);
+    return { m, b: b0, r2: 1 - ssr / sst };
+  }
+  function upd() {
+    const k = state.sample, s = curS(), d = s.digits + 1;
+    document.getElementById("calTubes").innerHTML = FR.map((f, i) => `
+      <button class="cal-tube ${cal.measured[i] ? "done" : ""}" data-i="${i}">
+        <div class="tube"><div class="liq" style="background:${solColor(k, stdC(i), 1.5)}"></div></div>
+        <div class="lbl">${stdC(i).toFixed(s.digits)} ${s.unit}</div><div class="a">${cal.measured[i] ? "A " + stdA(i).toFixed(3) : "측정 전"}</div></button>`).join("") +
+      `<button class="cal-tube unknown ${cal.uMeasured ? "done" : ""}" data-i="u">
+        <div class="tube"><div class="liq" style="background:${solColor(k, cal.uc, 1.5)}"></div></div>
+        <div class="lbl">미지 시료 ?</div><div class="a">${cal.uMeasured ? "A " + uA().toFixed(3) : "측정 전"}</div></button>`;
+    const nMeas = cal.measured.filter(Boolean).length;
+    document.getElementById("calFit").disabled = nMeas < 2;
+    document.getElementById("calUnknown").disabled = !cal.fit;
+    const f = cal.fit;
+    const sign = v => (v < 0 ? "− " : "+ ") + Math.abs(v).toFixed(4);
+    document.getElementById("calEq").textContent = f ? `A = ${f.m.toFixed(s.digits === 3 ? 2 : 4)} c ${sign(f.b)}` : "-";
+    document.getElementById("calR2").textContent = f ? f.r2.toFixed(4) : "-";
+    document.getElementById("calUA").textContent = cal.uMeasured ? uA().toFixed(3) : "-";
+    const uc = f && cal.uMeasured ? (uA() - f.b) / f.m : null;
+    document.getElementById("calUC").textContent = uc != null ? `${uc.toFixed(d)} ${s.unit}` : "-";
+    const tr = document.getElementById("calTruth");
+    if (cal.reveal && uc != null) { const err = Math.abs(uc - cal.uc) / cal.uc * 100; tr.innerHTML = `실제 ${cal.uc} ${s.unit} <span class="muted">(오차 ${err.toFixed(1)}%)</span>`; }
+    else tr.textContent = "";
+    document.getElementById("calReveal").disabled = uc == null;
+    draw(uc);
+  }
+  function draw(uc) {
+    if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv); const s = curS(), k = state.sample;
+    const box = { x: 96, y: 30, w: w - 130, h: h - 110 };
+    const ymax = niceMax(absorb(k, s.lmax, s.cmax) * 1.12);
+    const ax = axes(ctx, box, [0, s.cmax * 1.1], [0, ymax], { xStep: s.cmax / 5, xLabel: `농도 c (${s.unit})`, yLabel: `흡광도 A (λ = ${s.lmax} nm)`, xFmt: v => +v.toFixed(s.digits) });
+    if (cal.fit) {
+      const f = cal.fit; ctx.save(); ctx.beginPath(); ctx.rect(box.x, box.y, box.w, box.h); ctx.clip();
+      ctx.strokeStyle = "#4338ca"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ax.X(0), ax.Y(f.b)); ctx.lineTo(ax.X(s.cmax * 1.1), ax.Y(f.m * s.cmax * 1.1 + f.b)); ctx.stroke(); ctx.restore();
+      label(ctx, `A = ${f.m.toFixed(s.digits === 3 ? 2 : 4)}c ${f.b < 0 ? "−" : "+"} ${Math.abs(f.b).toFixed(4)}   R² = ${f.r2.toFixed(4)}`, box.x + 16, box.y + 18, { bg: "#4338ca" });
+    }
+    FR.forEach((_, i) => { if (!cal.measured[i]) return; ctx.fillStyle = "#1b2234"; ctx.beginPath(); ctx.arc(ax.X(stdC(i)), ax.Y(stdA(i)), 8, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); });
+    if (cal.uMeasured && uc != null) {
+      const ya = ax.Y(uA()), xc = ax.X(uc);
+      ctx.save(); ctx.setLineDash([9, 6]); ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(box.x, ya); ctx.lineTo(xc, ya); ctx.lineTo(xc, box.y + box.h); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = "#c62828"; ctx.beginPath(); ctx.arc(xc, ya, 9, 0, 7); ctx.fill();
+      label(ctx, `A = ${uA().toFixed(3)}`, box.x + 8, ya - 22, { bg: "#c62828", size: 16 });
+      label(ctx, `c ≈ ${uc.toFixed(s.digits + 1)} ${s.unit}`, xc + 10, box.y + box.h - 22, { bg: "#c62828", size: 16 });
+    }
+    if (!cal.measured.some(Boolean)) {
+      ctx.fillStyle = "#8a93a6"; ctx.font = `22px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("왼쪽의 표준 용액을 클릭해 흡광도를 측정하세요", box.x + box.w / 2, box.y + box.h / 2);
+    }
+  }
+  document.getElementById("calTubes").onclick = e => {
+    const b = e.target.closest(".cal-tube"); if (!b) return;
+    if (b.dataset.i === "u") { if (!cal.fit) { flash("먼저 표준 용액으로 검량선을 그리세요."); return; } cal.uMeasured = true; }
+    else { cal.measured[+b.dataset.i] = true; if (cal.fit) cal.fit = regress(); }
+    upd();
+  };
+  let flashT; function flash(t) { const tr = document.getElementById("calTruth"); tr.textContent = t; tr.style.color = "var(--bad)"; clearTimeout(flashT); flashT = setTimeout(() => { tr.style.color = ""; upd(); }, 1600); }
+  document.getElementById("calAll").onclick = () => { cal.measured = FR.map(() => true); if (cal.fit) cal.fit = regress(); upd(); };
+  document.getElementById("calFit").onclick = () => { cal.fit = regress(); upd(); };
+  document.getElementById("calUnknown").onclick = () => { cal.uMeasured = true; upd(); };
+  document.getElementById("calReveal").onclick = () => { cal.reveal = true; upd(); };
+  document.getElementById("calNew").onclick = () => { const m = curS().cmax; cal.uc = +(m * (0.12 + Math.random() * 0.8)).toPrecision(2); cal.un = rnd() * 0.01; cal.uMeasured = false; cal.reveal = false; upd(); };
+  document.getElementById("calReset").onclick = () => reset(false);
+  sampleListeners.push(() => reset(false));
+  reset(false);
+  renderers.cal = upd;
+})();
+
+/* ================= 10. 퀴즈 ================= */
+(function () {
+  const Q = [
+    { q: "다음 중 <b>정량분석</b>에 해당하는 것은?", o: ["용액에 Cu²⁺이 들어 있는지 확인한다", "음료 속 색소의 농도를 측정한다", "불꽃 반응색으로 원소를 확인한다", "앙금이 생기는지 관찰한다"], a: 1, e: "정량분석은 ‘얼마나’ 들어 있는지를 숫자로 측정하는 것입니다. 나머지는 ‘무엇이’ 있는지 확인하는 정성분석입니다." },
+    { q: "보라색으로 보이는 KMnO₄ 수용액이 가장 많이 흡수하는 빛의 색은?", o: ["빨강", "초록", "보라", "파랑"], a: 1, e: "용액은 흡수한 빛의 보색으로 보입니다. 보라(자주)색의 보색은 초록 → λmax ≈ 525 nm" },
+    { q: "흡광도를 <b>λmax</b>에서 측정하는 이유로 옳은 것은?", o: ["감도가 크고, 파장이 조금 어긋나도 오차가 작다", "빛이 가장 많이 투과되기 때문이다", "흡광도가 농도와 무관해지기 때문이다", "모든 물질의 λmax가 같기 때문이다"], a: 0, e: "λmax에서는 같은 농도 변화에 흡광도 변화가 가장 크고(감도 최대), 봉우리 꼭대기가 평평해 파장 오차의 영향이 작습니다." },
+    { q: "같은 큐벳과 같은 파장에서 용액의 농도를 <b>2배</b>로 하면 흡광도는?", o: ["절반이 된다", "변하지 않는다", "2배가 된다", "4배가 된다"], a: 2, e: "람베르트–비어 법칙 A = εbc 에서 ε, b가 같으면 A는 c에 비례합니다." },
+    { q: "어떤 용액의 투과도(T)가 <b>10%</b>일 때 흡광도(A)는?", o: ["0.1", "1", "10", "90"], a: 1, e: "A = −log T = −log 0.10 = 1" },
+    { q: "용액의 농도가 진해질 때 흡수 스펙트럼에서 <b>변하지 않는</b> 것은?", o: ["λmax의 위치", "봉우리의 높이", "λmax에서의 흡광도", "λmax에서의 투과도"], a: 0, e: "농도가 변하면 봉우리의 높이(흡광도)는 비례해서 변하지만, λmax의 위치와 스펙트럼 모양은 그대로입니다." },
+    { q: "검량선이 A = 2.4c (c 단위: mM)일 때, 미지 시료의 흡광도가 0.60이면 농도는?", o: ["0.25 mM", "0.40 mM", "1.44 mM", "4.0 mM"], a: 0, e: "c = A ÷ 2.4 = 0.60 ÷ 2.4 = 0.25 mM" },
+  ];
+  let i = 0; const ans = Q.map(() => null);
+  const opts = document.getElementById("qOpts");
+  function draw() {
+    const it = Q[i];
+    document.getElementById("qNum").textContent = `문제 ${i + 1} / ${Q.length}`;
+    document.getElementById("qScore").textContent = `정답 ${ans.filter((a, k) => a === Q[k].a).length} / ${ans.filter(a => a !== null).length}`;
+    document.getElementById("qText").innerHTML = it.q;
+    opts.innerHTML = it.o.map((t, k) => {
+      let cls = ""; if (ans[i] !== null) { if (k === it.a) cls = "correct"; else if (k === ans[i]) cls = "wrong"; }
+      return `<button class="opt ${cls}" data-k="${k}"><span class="n">${"①②③④"[k]}</span>${t}</button>`;
+    }).join("");
+    const ex = document.getElementById("qExplain");
+    ex.className = "explain" + (ans[i] === null ? "" : " callout " + (ans[i] === it.a ? "good" : ""));
+    ex.innerHTML = ans[i] === null ? "" : `<b>${ans[i] === it.a ? "⭕ 정답!" : "❌ 아쉬워요."}</b> ${it.e}`;
+    document.getElementById("qPrev").disabled = i === 0;
+    document.getElementById("qNext").disabled = i === Q.length - 1;
+  }
+  opts.onclick = e => { const b = e.target.closest(".opt"); if (!b || ans[i] !== null) return; ans[i] = +b.dataset.k; draw(); };
+  document.getElementById("qPrev").onclick = () => { i--; draw(); };
+  document.getElementById("qNext").onclick = () => { i++; draw(); };
+  document.getElementById("qReset").onclick = () => { ans.fill(null); i = 0; draw(); };
+  draw();
+})();
+
+/* ================= 시작 ================= */
+concSyncs.forEach(f => f());
+const start = parseInt(location.hash.slice(1)) - 1;
+cur = 0; slides[0].classList.add("active");
+fit(); go(isNaN(start) ? 0 : start);
+</script>
+</body>
+</html>
