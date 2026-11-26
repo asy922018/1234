@@ -164,6 +164,10 @@ canvas{display:block;width:100%;height:100%}
 .inst svg{width:100%;height:100%;display:block}
 .inst .part{transition:opacity .3s}
 .inst.focusing .part{opacity:.22}
+.inst.focusing .part.near{opacity:1}
+.inst .beam{transition:opacity .3s,filter .3s}
+.inst.focusing .beam{opacity:.2}
+.inst.focusing .beam.lit{opacity:1;filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 10px rgba(99,102,241,.55))}
 .inst.focusing .part.focus{opacity:1}
 .inst .hlbox{display:none}
 .inst .part.focus .hlbox{display:block}
@@ -561,7 +565,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v8 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v9 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -962,7 +966,7 @@ document.getElementById("titleTubes").innerHTML =
   const rowOf = l => ROWS.findIndex(r => l < r.r[1] || r === ROWS[ROWS.length - 1]);
   // 예측할 용액들
   const SOLS = [
-    { name: "황산 구리(Ⅱ) 수용액", A: l => absorb("cuso4", l, 0.1, 2.5), note: "실제 λmax ≈ 810 nm(근적외선) — 가시광선 중에서는 빨간빛을 가장 많이 흡수" },
+    { name: "황산 구리(Ⅱ) 수용액", A: l => absorb("cuso4", l, 0.1, 2.5), note: "600 nm부터 흡수가 커지며, 최대는 약 810 nm(근적외선)" },
     { name: "과망가니즈산 칼륨(KMnO₄) 수용액", A: l => absorb("kmno4", l, 0.25, 1.5) },
     { name: "식용색소 청색 1호", A: l => absorb("blue1", l, 5, 1.5) },
     { name: "식용색소 적색 40호", A: l => absorb("red40", l, 25, 1.5) },
@@ -971,6 +975,7 @@ document.getElementById("titleTubes").innerHTML =
   SOLS.forEach(s => { s.color = colorOf(s.A); let m = 0, lm = 400; for (let l = 400; l <= 700; l++) { const v = s.A(l); if (v > m) { m = v; lm = l; } } s.vmax = m; s.lmax = lm;
     const c = s.color.match(/\d+/g).map(v => v / 255), mx = Math.max(...c), mn = Math.min(...c), d = mx - mn;
     let h = d < 1e-6 ? 0 : mx === c[0] ? ((c[1] - c[2]) / d) % 6 : mx === c[1] ? (c[2] - c[0]) / d + 2 : (c[0] - c[1]) / d + 4; s.hue = (h * 60 + 360) % 360; });
+  SOLS.forEach(s => { const l = hue2lam((s.hue + 180) % 360); s.compL = l == null ? null : Math.round(l); });
   const st = { mode: "predict", i: 0, pred: null, revealed: false, hint: false, freeL: 640 };
   const cv = document.getElementById("wheelCanvas"), card = document.getElementById("pdCard"), tbl = document.getElementById("cmpTable");
   let geo = null;
@@ -1019,7 +1024,15 @@ document.getElementById("titleTubes").innerHTML =
     marker(obsHue, hsl(obsHue), "보이는 색", "#1b2234");
     if (st.mode === "predict" && st.hint && !st.revealed) { const [x, y] = pt(obsHue + 180, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.setLineDash([4, 4]); ctx.strokeStyle = "#1b2234"; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); }
     if (predHue != null) marker(predHue, "rgba(255,255,255,.25)", `예측 ${Math.round(st.pred)} nm`, "#4338ca", "#4338ca", true);
-    if (absHue != null) marker(absHue, hsl(absHue), st.mode === "free" ? `흡수 ${st.freeL} nm` : `실제 흡수 ${SOLS[st.i].lmax >= 700 ? "700+" : SOLS[st.i].lmax} nm`, "#c62828", "#c62828");
+    if (st.mode === "predict" && st.revealed) {
+      const s = SOLS[st.i]; ctx.save(); ctx.lineCap = "butt";
+      for (let l = 400; l < 700; l++) { const v = s.A(l) / s.vmax; if (v < 0.35) continue;
+        ctx.strokeStyle = `rgba(198,40,40,${(0.25 + 0.75 * v).toFixed(2)})`; ctx.lineWidth = 10;
+        const a1 = lam2hue(l), a2 = lam2hue(l + 1); let lo = Math.min(a1, a2), hi = Math.max(a1, a2); if (hi - lo > 180) { const t = lo; lo = hi; hi = t + 360; }
+        ctx.beginPath(); ctx.arc(cx, cy, r0 - 2, ang(lo - .4), ang(hi + .4)); ctx.stroke(); }
+      ctx.restore();
+    }
+    if (absHue != null) marker(absHue, hsl(absHue), st.mode === "free" ? `흡수 ${st.freeL} nm` : `최대 흡수 ${SOLS[st.i].lmax >= 700 ? "700+" : SOLS[st.i].lmax} nm`, "#c62828", "#c62828");
   }
   function mini(c2) {
     if (!c2 || !c2.clientWidth) return;
@@ -1052,11 +1065,14 @@ document.getElementById("titleTubes").innerHTML =
     const pk = st.pred != null ? rowOf(st.pred) : -1;
     let fb = "";
     if (st.revealed) {
-      const r = s.A(st.pred) / s.vmax, ok = r >= 0.7, near = r >= 0.35;
+      // 흡수가 큰 구간(최대의 70% 이상) 안이거나, 용액 색의 보색 위치(±25 nm)와 맞으면 정답
+      const r = s.A(st.pred) / s.vmax, dC = s.compL == null ? 999 : Math.abs(st.pred - s.compL);
+      const ok = r >= 0.7 || dC <= 25, near = r >= 0.35 || dC <= 50;
       const ansRow = ROWS[rowOf(s.lmax)];
       fb = `<div class="pd-fb ${ok ? "callout good" : near ? "callout" : "callout"}" style="${!near ? "background:var(--bad-soft);border-color:#f3b9b9" : ""}">
         <b>${ok ? "⭕ 정답!" : near ? "🔺 아깝다! 거의 맞았어요." : "❌ 다시 생각해 봐요."}</b> 정체: <b>${s.name}</b><br>
-        실제로 가장 많이 흡수하는 빛: <b>${ansRow.ab}</b> (λ<sub>max</sub> ${s.lmax >= 700 ? "700 nm 이상" : "≈ " + s.lmax + " nm"}) · 예측 ${Math.round(st.pred)} nm
+        가장 많이 흡수하는 빛: <b>${ansRow.ab}</b> (λ<sub>max</sub> ${s.lmax >= 700 ? "700 nm 이상" : "≈ " + s.lmax + " nm"})<br>
+        보색 위치 ≈ ${s.compL ?? "-"} nm · 예측 ${Math.round(st.pred)} nm
         ${s.note ? `<br><span style="font-size:15px">${s.note}</span>` : ""}</div>`;
     }
     card.innerHTML = `
@@ -1132,11 +1148,11 @@ function Instrument(host) {
     <linearGradient id="white${host.id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset=".25" stop-color="#60a5fa"/><stop offset=".5" stop-color="#86efac"/><stop offset=".75" stop-color="#fde047"/><stop offset="1" stop-color="#fca5a5"/></linearGradient>
   </defs>
   <g class="beams">
-    <rect x="130" y="${C - 7}" width="215" height="14" fill="url(#white${host.id})" opacity=".85"/>
-    <g class="fan"></g>
-    <line class="mono-beam" x1="612" y1="${C}" x2="772" y2="${C}" stroke-width="12" stroke-linecap="butt"/>
-    <line class="in-cuv" x1="772" y1="${C}" x2="836" y2="${C}" stroke-width="12"/>
-    <line class="out-beam" x1="836" y1="${C}" x2="1040" y2="${C}" stroke-width="12"/>
+    <rect class="beam b-white" x="130" y="${C - 7}" width="215" height="14" fill="url(#white${host.id})" opacity=".85"/>
+    <g class="fan beam b-fan"></g>
+    <line class="mono-beam beam b-mono" x1="612" y1="${C}" x2="772" y2="${C}" stroke-width="12" stroke-linecap="butt"/>
+    <line class="in-cuv beam b-in" x1="772" y1="${C}" x2="836" y2="${C}" stroke-width="12"/>
+    <line class="out-beam beam b-out" x1="836" y1="${C}" x2="1040" y2="${C}" stroke-width="12"/>
   </g>
   <g class="part" data-p="0">${hl(20, 70, 150, 310)}
     <circle cx="92" cy="${C}" r="44" fill="url(#bulb${host.id})" stroke="#c59b1c" stroke-width="3"/>
@@ -1193,8 +1209,12 @@ function Instrument(host) {
       q(".dL").textContent = "λ " + Math.round(l) + " nm";
     },
     focus(i) {
+      // 각 부품에 들어가고 나오는 빛(앞뒤)과 이웃 부품을 함께 강조
+      const BEAMS = [["b-white"], ["b-white", "b-fan", "b-mono"], ["b-fan", "b-mono"], ["b-mono", "b-in", "b-out"], ["b-out"], []];
+      const NEAR = [[], [0, 2], [1], [], [], [4]];
       host.classList.toggle("focusing", i >= 0);
-      parts.forEach((p, k) => p.classList.toggle("focus", k === i));
+      parts.forEach((p, k) => { p.classList.toggle("focus", k === i); p.classList.toggle("near", i >= 0 && NEAR[i].includes(k)); });
+      svg.querySelectorAll(".beam").forEach(b => b.classList.toggle("lit", i >= 0 && BEAMS[i].some(c => b.classList.contains(c))));
     },
     onPart(f) { parts.forEach((p, k) => p.addEventListener("click", () => f(k))); },
   };
