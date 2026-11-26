@@ -805,7 +805,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v19 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v20 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -2039,29 +2039,42 @@ const SVGNS = "http://www.w3.org/2000/svg";
       <path d="M${cx + 66} ${yb} l34 -15 v9 h50 v12 h-50 v9 z" fill="#fff" stroke="#1b2234" stroke-width="2"/>
       <text x="${cx + 160}" y="${yb - 22}" text-anchor="end" font-size="26" font-weight="800" fill="#dc2626" stroke="#fff" stroke-width="6" paint-order="stroke">${label}</text>`;
   }
-  const PW = 320, PH = 250, GAP = 52, X0 = 30;
+  const PW = 320, PH = 228, GAP = 52, X0 = 30, RH = PH + 112;
   const panelX = k => X0 + k * (PW + GAP);
-  function row(y, title, color, liquid, liqName, val, label, caps) {
-    let h = `<rect x="10" y="${y}" width="1468" height="${PH + 96}" rx="18" fill="#e5e7eb"/>
+  // 스포이트 + 2~3방울
+  const dropper = (x, y, c) => `<g transform="translate(${x},${y}) rotate(18)">
+      <ellipse cx="0" cy="-34" rx="13" ry="17" fill="#94a3b8" stroke="#1b2234" stroke-width="2.5"/>
+      <rect x="-6" y="-20" width="12" height="54" rx="3" fill="rgba(226,240,250,.95)" stroke="#1b2234" stroke-width="2.5"/>
+      <rect x="-4" y="6" width="8" height="26" fill="${c}"/>
+      <path d="M-4 34 L0 44 L4 34" fill="rgba(226,240,250,.95)" stroke="#1b2234" stroke-width="2.5"/></g>`;
+  const drops = (x, y, c) => [[0, 0], [8, 26], [15, 50]].map(([dx, dy]) => `<path transform="translate(${x + dx},${y + dy}) scale(.45)" d="M0 -30 C10 -14 20 -2 20 10 A20 20 0 0 1 -20 10 C-20 -2 -10 -14 0 -30 Z" fill="${c}" stroke="#1b2234" stroke-width="4"/>`).join("");
+  // 닦는 천
+  const cloth = (x, y) => `<g transform="translate(${x},${y}) rotate(-20)">
+      <path d="M-34 -18 Q-10 -28 30 -20 Q40 0 32 20 Q0 28 -30 18 Q-40 0 -34 -18 Z" fill="#e0f2fe" stroke="#1b2234" stroke-width="2.5"/>
+      <path d="M-22 -6 q12 -6 24 0 M-18 6 q12 -6 24 0" fill="none" stroke="#7dd3fc" stroke-width="2.5"/></g>
+      <path d="M${x - 58} ${y - 10} q-10 8 0 16 M${x - 68} ${y - 18} q-14 14 0 30" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>`;
+  function row(y, title, liquid, liqName, val, label, caps) {
+    let h = `<rect x="10" y="${y}" width="1468" height="${RH}" rx="18" fill="#e5e7eb"/>
       <text x="30" y="${y + 34}" font-size="28" font-weight="800" fill="#374151">${title}</text>`;
     for (let k = 0; k < 4; k++) {
-      const x = panelX(k), py = y + 48;
+      const x = panelX(k), py = y + 46;
       h += `<g class="use-panel" data-k="${y > 100 ? 4 + k : k}" style="transition:opacity .35s">
         <rect x="${x}" y="${py}" width="${PW}" height="${PH}" rx="8" fill="#fff"/>`;
-      if (k === 0) h += refr(x + 175, py + 150, 0.95, -32) + sparkle(x + 52, py + 150, 1.2) + sparkle(x + 82, py + 115, 0.8);
-      if (k === 1) h += refr(x + 175, py + 160, 0.95, -32, { open: true, tint: liquid }) + drop(x + 92, py + 92, liquid) +
-        (liqName === "물" ? `<path d="M${x + 30} ${py + 26} h40 v-10 h16 v26 h-16 v-8 h-28 v16 h-12 z" fill="#64748b"/>` : `<rect x="${x + 30}" y="${py + 14}" width="34" height="38" rx="6" fill="#fde2d2" stroke="#64748b" stroke-width="3"/><rect x="${x + 33}" y="${py + 32}" width="28" height="17" fill="#f4a582"/>`) +
-        `<text x="${x + 100}" y="${py + 42}" font-size="28" fill="#1b2234">${liqName}</text>`;
-      if (k === 2) h += refr(x + 120, py + 150, 0.7, -12) + `<line x1="${x + 188}" y1="${py + 131}" x2="${x + 236}" y2="${py + 124}" stroke="#1b2234" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>` + face(x + 262, py + 150);
-      if (k === 3) h += scale(x + 130, py + PH / 2, 112, val, label);
-      h += `<text x="${x + PW / 2}" y="${py + PH + 34}" text-anchor="middle" font-size="22" font-weight="700" fill="#1b2234">${caps[k]}</text></g>`;
+      if (k === 0) h += refr(x + 185, py + 150, 0.92, -32, { open: true }) + cloth(x + 112, py + 82) + sparkle(x + 40, py + 170, 1.1) + sparkle(x + 66, py + 200, 0.7);
+      if (k === 1) h += refr(x + 185, py + 158, 0.92, -32, { open: true, tint: liquid }) + dropper(x + 92, py + 62, liquid) + drops(x + 84, py + 114, liquid) +
+        `<text x="${x + 128}" y="${py + 44}" font-size="26" font-weight="700" fill="#1b2234">${liqName}</text>`;
+      if (k === 2) h += refr(x + 118, py + 140, 0.7, -12, { tint: liquid }) + `<line x1="${x + 186}" y1="${py + 121}" x2="${x + 234}" y2="${py + 114}" stroke="#1b2234" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>` + face(x + 260, py + 140);
+      if (k === 3) h += scale(x + 130, py + PH / 2, 104, val, label);
+      h += `<text text-anchor="middle" font-size="21" font-weight="700" fill="#1b2234"><tspan x="${x + PW / 2}" y="${py + PH + 30}">${caps[k][0]}</tspan><tspan x="${x + PW / 2}" y="${py + PH + 57}">${caps[k][1]}</tspan></text></g>`;
       if (k < 3) h += `<path d="M${x + PW + 14} ${py + PH / 2 - 16} l24 16 l-24 16 z" fill="#1b2234"/>`;
     }
     return h;
   }
-  const h1 = row(0, "① 영점 맞추기", "#2f8fe0", "#60a5fa", "물", 0, "0.0 %", ["프리즘 깨끗이 닦기", "증류수 올리고 덮개 닫기", "접안렌즈로 들여다보기", "경계선을 0에 맞추기"]);
-  const h2 = row(360, "② 측정하기", "#f4a582", "#f4a582", "시료", 20, "20.0 %", ["프리즘 다시 닦기", "시료 올리고 덮개 닫기", "접안렌즈로 들여다보기", "경계선 눈금 읽기"]);
-  svg.innerHTML = h1 + `<path d="M714 ${346 - 4} h60 l-30 18 z" fill="#9ca3af"/>` + h2;
+  const h1 = row(0, "① 영점 맞추기", "#60a5fa", "증류수", 0, "0.0 %",
+    [["1. 프리즘 덮개를 열고", "깨끗이 닦기"], ["2. 증류수를", "2~3방울 올리기"], ["3. 덮개를 닫고", "접안렌즈로 들여다보기"], ["4. 경계선을 0에 맞추기", "(영점 조절 나사)"]]);
+  const h2 = row(RH + 18, "② 측정하기", "#f4a582", "시료", 20, "20.0 %",
+    [["1. 프리즘 덮개를 열고", "깨끗이 닦기"], ["2. 시료를", "2~3방울 올리기"], ["3. 덮개를 닫고", "접안렌즈로 들여다보기"], ["4. 경계선의", "눈금 읽기"]]);
+  svg.innerHTML = h1 + `<path d="M714 ${RH + 2} h60 l-30 16 z" fill="#9ca3af"/>` + h2;
   const panels = [...svg.querySelectorAll(".use-panel")].sort((a, b) => a.dataset.k - b.dataset.k);
   let step = -1;
   const showAll = () => { step = -1; panels.forEach(p => p.style.opacity = 1); document.getElementById("useStep").textContent = "▶ 순서대로 보기"; };
