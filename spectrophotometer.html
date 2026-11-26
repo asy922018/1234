@@ -108,10 +108,13 @@ select{font:inherit}
 .prep-table tr:nth-child(3) td{background:#e9edf4}
 .prep-table td[contenteditable]{outline:none;cursor:text}
 .prep-table td[contenteditable]:hover,.prep-table td[contenteditable]:focus{background:#fff8d6!important;box-shadow:inset 0 0 0 3px #f6d365}
-.rec-guide{font-size:28px;font-weight:700;margin:8px 0 0}
+.rec-guide{font-size:32px;font-weight:700;margin:8px 0 0}
 .ws-table{border-collapse:collapse;font-size:32px;text-align:center;background:#fff;width:100%}
 .ws-table th,.ws-table td{border:2px solid #4b5563;padding:10px 14px}
 .ws-table th{background:#eef1f6;font-weight:600}
+.ws-table.big{font-size:40px;table-layout:fixed}
+.ws-table.big td,.ws-table.big th{padding:16px 14px;height:84px}
+.ws-table.big tr > :first-child{width:330px}
 .ws-table.sm{font-size:24px}
 .ws-table.sm th,.ws-table.sm td{padding:6px 8px}
 .ws-table.sm{table-layout:fixed}
@@ -508,17 +511,13 @@ canvas{display:block;width:100%;height:100%}
       </div>
     </section>
 
-    <!-- 당도 측정 기록 (입력·저장) -->
+    <!-- 당도 측정 기록 (원래 표 그대로) -->
     <section class="slide" data-title="당도 측정 기록" data-id="brixrec">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <h2>당도 측정하기</h2>
-        <div class="btn-row"><button class="btn soft" id="recAvgAll">평균 모두 보기</button><button class="btn ghost" id="recClear">기록 지우기</button></div>
-      </div>
+      <h2>당도 측정하기</h2>
       <p class="rec-guide">☞ 표준 용액(Ⅰ~Ⅳ)의 당도를 측정하여 기록해 봅시다. 2회씩 측정하고 평균을 구해 봅시다.</p>
       <div style="flex:1;display:flex;align-items:center;justify-content:center">
-        <table class="ws-table" id="recTable"></table>
+        <table class="ws-table big" id="recTable"></table>
       </div>
-      <p class="muted" style="font-size:17px;margin:0">✏️ 측정값 칸을 눌러 숫자를 입력하세요 · 자동 저장 · 평균 칸은 누르면 계산값이 보입니다</p>
     </section>
 
     <!-- 당도 검정선 그리기 -->
@@ -805,7 +804,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v20 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v21 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -1997,21 +1996,22 @@ const SVGNS = "http://www.w3.org/2000/svg";
   const svg = document.getElementById("useSvg");
   // 당도계: 왼쪽 아래가 프리즘, 오른쪽 위가 접안렌즈
   function refr(x, y, sc, rot, o = {}) {
-    const cover = o.open
-      ? `<g transform="rotate(-32 -66 -16)"><rect x="-130" y="-30" width="64" height="12" rx="4" fill="rgba(186,220,250,.9)" stroke="#1b2234" stroke-width="3"/></g>`
-      : `<rect x="-132" y="-27" width="64" height="12" rx="4" fill="rgba(186,220,250,.9)" stroke="#1b2234" stroke-width="3"/>`;
-    const plate = o.tint ? `<rect x="-124" y="-14" width="52" height="10" rx="3" fill="${o.tint}"/>` : "";
+    // 프리즘(유리면) 위에 파란 반투명 덮개가 경첩(-66,-24)으로 붙어 있음. 열면 위로 들림.
+    const flap = `<rect x="-138" y="-36" width="72" height="14" rx="4" fill="rgba(59,130,246,.55)" stroke="#1b2234" stroke-width="3"/>
+      <rect x="-132" y="-33" width="56" height="4" rx="2" fill="rgba(255,255,255,.6)"/>`;
+    const cover = o.open ? `<g transform="rotate(58 -66 -24)">${flap}</g>` : flap;
     return `<g transform="translate(${x},${y}) rotate(${rot}) scale(${sc})">
-      <path d="M-132 -16 L-68 -20 L-68 20 L-132 14 Z" fill="#e5e7eb" stroke="#1b2234" stroke-width="3" stroke-linejoin="round"/>
-      ${plate}
-      <rect x="-124" y="-14" width="52" height="10" rx="3" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M-138 -22 L-66 -24 L-66 20 L-132 14 Z" fill="#d1d5db" stroke="#1b2234" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="-134" y="-23" width="64" height="9" rx="2" fill="${o.open ? "#a5f3fc" : "#cbd5e1"}" stroke="#0e7490" stroke-width="2"/>
+      ${o.open ? `<path d="M-128 -20 l14 0 M-104 -20 l10 0" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>` : ""}
       ${cover}
-      <rect x="-68" y="-19" width="40" height="38" fill="#cbd5e1" stroke="#1b2234" stroke-width="3"/>
-      <circle cx="-48" cy="-19" r="6" fill="#1b2234"/>
-      <rect x="-28" y="-21" width="112" height="42" rx="6" fill="#1f2937" stroke="#1b2234" stroke-width="3"/>
-      ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(k => `<line x1="${-18 + k * 11}" y1="-17" x2="${-18 + k * 11}" y2="17" stroke="#4b5563" stroke-width="3"/>`).join("")}
-      <rect x="84" y="-18" width="44" height="36" rx="8" fill="#111827" stroke="#1b2234" stroke-width="3"/>
-      <rect x="126" y="-14" width="8" height="28" rx="3" fill="#374151"/>
+      <circle cx="-66" cy="-24" r="5" fill="#475569" stroke="#1b2234" stroke-width="2"/>
+      <rect x="-66" y="-19" width="40" height="38" fill="#cbd5e1" stroke="#1b2234" stroke-width="3"/>
+      <circle cx="-46" cy="-19" r="6" fill="#1b2234"/>
+      <rect x="-26" y="-21" width="112" height="42" rx="6" fill="#1f2937" stroke="#1b2234" stroke-width="3"/>
+      ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(k => `<line x1="${-16 + k * 11}" y1="-17" x2="${-16 + k * 11}" y2="17" stroke="#4b5563" stroke-width="3"/>`).join("")}
+      <rect x="86" y="-18" width="44" height="36" rx="8" fill="#111827" stroke="#1b2234" stroke-width="3"/>
+      <rect x="128" y="-14" width="8" height="28" rx="3" fill="#374151"/>
     </g>`;
   }
   const sparkle = (x, y, s) => `<path transform="translate(${x},${y}) scale(${s})" d="M0 -20 Q3 -3 20 0 Q3 3 0 20 Q-3 3 -20 0 Q-3 -3 0 -20 Z" fill="#fde047" stroke="#1b2234" stroke-width="2"/>`;
@@ -2060,10 +2060,10 @@ const SVGNS = "http://www.w3.org/2000/svg";
       const x = panelX(k), py = y + 46;
       h += `<g class="use-panel" data-k="${y > 100 ? 4 + k : k}" style="transition:opacity .35s">
         <rect x="${x}" y="${py}" width="${PW}" height="${PH}" rx="8" fill="#fff"/>`;
-      if (k === 0) h += refr(x + 185, py + 150, 0.92, -32, { open: true }) + cloth(x + 112, py + 82) + sparkle(x + 40, py + 170, 1.1) + sparkle(x + 66, py + 200, 0.7);
-      if (k === 1) h += refr(x + 185, py + 158, 0.92, -32, { open: true, tint: liquid }) + dropper(x + 92, py + 62, liquid) + drops(x + 84, py + 114, liquid) +
+      if (k === 0) h += refr(x + 185, py + 150, 0.92, -32, { open: true }) + cloth(x + 110, py + 66) + sparkle(x + 40, py + 170, 1.1) + sparkle(x + 66, py + 200, 0.7);
+      if (k === 1) h += refr(x + 185, py + 158, 0.92, -32, { open: true }) + dropper(x + 84, py + 96, liquid) +
         `<text x="${x + 128}" y="${py + 44}" font-size="26" font-weight="700" fill="#1b2234">${liqName}</text>`;
-      if (k === 2) h += refr(x + 118, py + 140, 0.7, -12, { tint: liquid }) + `<line x1="${x + 186}" y1="${py + 121}" x2="${x + 234}" y2="${py + 114}" stroke="#1b2234" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>` + face(x + 260, py + 140);
+      if (k === 2) h += refr(x + 118, py + 140, 0.7, -12) + `<line x1="${x + 186}" y1="${py + 121}" x2="${x + 234}" y2="${py + 114}" stroke="#1b2234" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>` + face(x + 260, py + 140);
       if (k === 3) h += scale(x + 130, py + PH / 2, 104, val, label);
       h += `<text text-anchor="middle" font-size="21" font-weight="700" fill="#1b2234"><tspan x="${x + PW / 2}" y="${py + PH + 30}">${caps[k][0]}</tspan><tspan x="${x + PW / 2}" y="${py + PH + 57}">${caps[k][1]}</tspan></text></g>`;
       if (k < 3) h += `<path d="M${x + PW + 14} ${py + PH / 2 - 16} l24 16 l-24 16 z" fill="#1b2234"/>`;
@@ -2220,13 +2220,10 @@ const SVGNS = "http://www.w3.org/2000/svg";
   const ROMAN = ["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ"];
   const DEF = { sugar: ["0", "0.5", "1", "2"], water: ["20", "19.5", "19", "18"] };
   let std = store.get("spectro.std.v1", null) || JSON.parse(JSON.stringify(DEF));
-  let meas = store.get("spectro.meas.v1", null) || { r1: ["", "", "", ""], r2: ["", "", "", ""] };
   const num = v => { const x = parseFloat(String(v).replace(",", ".")); return isFinite(x) ? x : null; };
   const fmt = v => v == null ? "-" : (+v.toFixed(2)).toString();
   // 평균 당도: 측정값이 있으면 그 평균, 없으면 이론값(설탕 ÷ 용액 × 100)
   function avg(i) {
-    const vals = [num(meas.r1[i]), num(meas.r2[i])].filter(v => v != null);
-    if (vals.length) return { v: vals.reduce((a, b) => a + b, 0) / vals.length, measured: true };
     const s = num(std.sugar[i]), w = num(std.water[i]);
     return { v: s != null && w != null && s + w > 0 ? s / (s + w) * 100 : null, measured: false };
   }
@@ -2249,24 +2246,15 @@ const SVGNS = "http://www.w3.org/2000/svg";
   stdTable.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } });
   document.getElementById("stdReset").onclick = () => { if (!confirm("표의 값을 처음 값으로 되돌릴까요?")) return; std = JSON.parse(JSON.stringify(DEF)); store.set("spectro.std.v1", std); renderStd(); renderRec(); renderBG(); };
 
-  /* --- 당도 측정 기록 --- */
+  /* --- 당도 측정 기록 (빈 표) --- */
   const recTable = document.getElementById("recTable");
   function renderRec() {
     recTable.innerHTML = `<tr><th colspan="2">용액</th>${ROMAN.map(r => `<th>${r}</th>`).join("")}</tr>
-      <tr><td colspan="2">각 표준 용액 20 g에 들어<br>있는 설탕의 질량(g)</td>${std.sugar.map(v => `<td>${v}</td>`).join("")}</tr>
-      <tr><td rowspan="2">당도 (°Brix)</td><td>1회</td>${meas.r1.map((v, i) => `<td><input inputmode="decimal" data-r="r1" data-i="${i}" value="${v}"></td>`).join("")}</tr>
-      <tr><td>2회</td>${meas.r2.map((v, i) => `<td><input inputmode="decimal" data-r="r2" data-i="${i}" value="${v}"></td>`).join("")}</tr>
-      <tr><td colspan="2">평균 당도(°Brix)</td>${ROMAN.map((_, i) => { const a = avg(i); return `<td><button class="blank sm rec-avg" data-i="${i}">${a.measured ? fmt(a.v) : "-"}</button></td>`; }).join("")}</tr>`;
-    recTable.querySelectorAll(".rec-avg").forEach(b => b.onclick = () => b.classList.toggle("show"));
+      <tr><td colspan="2" style="font-size:32px;line-height:1.35">각 표준 용액 20 g에 들어<br>있는 설탕의 질량(g)</td>${std.sugar.map(v => `<td>${v}</td>`).join("")}</tr>
+      <tr><td rowspan="2" style="width:200px">당도 (°Brix)</td><td style="width:130px">1회</td>${ROMAN.map(() => "<td></td>").join("")}</tr>
+      <tr><td>2회</td>${ROMAN.map(() => "<td></td>").join("")}</tr>
+      <tr><td colspan="2">평균 당도(°Brix)</td>${ROMAN.map(() => "<td></td>").join("")}</tr>`;
   }
-  recTable.addEventListener("input", e => {
-    const el = e.target; if (!el.dataset.r) return;
-    meas[el.dataset.r][+el.dataset.i] = el.value.trim(); store.set("spectro.meas.v1", meas);
-    const i = +el.dataset.i, a = avg(i), b = recTable.querySelector(`.rec-avg[data-i="${i}"]`); if (b) b.textContent = a.measured ? fmt(a.v) : "-";
-    renderBG();
-  });
-  document.getElementById("recAvgAll").onclick = () => recTable.querySelectorAll(".rec-avg").forEach(b => b.classList.add("show"));
-  document.getElementById("recClear").onclick = () => { if (!confirm("입력한 측정값을 모두 지울까요?")) return; meas = { r1: ["", "", "", ""], r2: ["", "", "", ""] }; store.set("spectro.meas.v1", meas); renderRec(); renderBG(); };
 
   /* --- 당도 검정선 그리기 --- */
   const bgTable = document.getElementById("bgTable"), svg = document.getElementById("bgSvg");
@@ -2288,8 +2276,7 @@ const SVGNS = "http://www.w3.org/2000/svg";
     const f = fit();
     const mEl = document.getElementById("bgM"), bEl = document.getElementById("bgB");
     mEl.textContent = f.m == null ? "-" : fmt(f.m); bEl.textContent = f.b == null ? "-" : fmt(f.b);
-    const anyMeasured = [0, 1, 2, 3].some(i => avg(i).measured);
-    document.getElementById("bgNote").textContent = anyMeasured ? "※ 평균 당도는 '당도 측정하기' 화면에 입력한 측정값으로 계산했습니다." : "※ 측정값을 입력하지 않아 이론값(설탕 질량 ÷ 용액 질량 × 100)을 보여 줍니다.";
+    document.getElementById("bgNote").textContent = "";
     // 그래프 (정답 전에는 눈금 숫자 없이 모눈만)
     const X0 = 110, Y0 = 470, W = 620, H = 440;
     const xs = f.pts.map(p => p[0]), ys = f.pts.map(p => p[1]);
@@ -2305,7 +2292,7 @@ const SVGNS = "http://www.w3.org/2000/svg";
     if (showAns && f.m != null) {
       const xStep = niceStep(xMax, 5), yStep = niceStep(yMax, 5);
       for (let v = xStep; v <= xMax + 1e-9; v += xStep) h += `<text x="${X(v)}" y="${Y0 + 30}" text-anchor="middle" font-size="24" fill="#4338ca">${+v.toFixed(2)}</text>`;
-      for (let v = yStep; v <= yMax + 1e-9; v += yStep) h += `<text x="${X0 - 10}" y="${Y(v) + 8}" text-anchor="end" font-size="24" fill="#4338ca">${+v.toFixed(2)}</text>`;
+      for (let v = yStep; v <= yMax * 0.96; v += yStep) h += `<text x="${X0 - 10}" y="${Y(v) + 8}" text-anchor="end" font-size="24" fill="#4338ca">${+v.toFixed(2)}</text>`;
       h += `<line x1="${X(0)}" y1="${Y(f.b)}" x2="${X(xMax)}" y2="${Y(f.m * xMax + f.b)}" stroke="#4338ca" stroke-width="4"/>`;
       f.pts.forEach(([x, y]) => h += `<circle cx="${X(x)}" cy="${Y(y)}" r="10" fill="#c62828" stroke="#fff" stroke-width="3"/>`);
       h += `<rect x="${X0 + 16}" y="${Y0 - H + 14}" width="330" height="48" rx="10" fill="#4338ca"/><text x="${X0 + 181}" y="${Y0 - H + 47}" text-anchor="middle" font-size="26" font-weight="800" fill="#fff">y = ${fmt(f.m)}x ${f.b < 0 ? "−" : "+"} ${fmt(Math.abs(f.b))}</text>`;
