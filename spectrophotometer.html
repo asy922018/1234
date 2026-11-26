@@ -170,7 +170,7 @@ canvas{display:block;width:100%;height:100%}
 .inst.focusing .beam.lit{opacity:1;filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 10px rgba(99,102,241,.55))}
 .inst.focusing .part.focus{opacity:1}
 .inst .hlbox{display:none}
-.inst .part.focus .hlbox{display:block}
+.inst .hlbox.on{display:block}
 .inst .part{cursor:pointer}
 .steps{display:flex;gap:8px}
 .steps button{flex:1;border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 6px;font-size:18px;font-weight:700;color:var(--muted)}
@@ -349,40 +349,6 @@ canvas{display:block;width:100%;height:100%}
       <div class="card part-explain" id="partExplain" style="flex:1"></div>
     </section>
 
-    <!-- 5. 측정 시뮬레이션 -->
-    <section class="slide" data-title="투과도와 흡광도" data-id="sim">
-      <h2>측정해 보기 <small>투과도(T)와 흡광도(A)</small></h2>
-      <div class="card inst" id="instSim" style="height:330px;padding:6px 14px;margin-top:8px"><svg viewBox="0 0 1480 380"></svg></div>
-      <div class="row" style="margin-top:16px;flex:1">
-        <div class="card col" style="flex:1.15;gap:10px">
-          <div class="row" style="gap:20px">
-            <div class="ctrl" style="flex:1"><label>시료</label><select class="sample-select"></select></div>
-            <div class="ctrl" style="flex:1"><label>큐벳에 넣을 용액</label>
-              <div class="seg" id="simCuv"><button data-v="blank">바탕 용액(물)</button><button data-v="sample" class="on">시료 용액</button></div></div>
-          </div>
-          <div class="ctrl"><label>측정 파장 λ <output id="simLOut"></output></label>
-            <input type="range" class="rainbow" id="simL" min="380" max="900" step="1" value="650"></div>
-          <div class="row" style="gap:20px;align-items:flex-end">
-            <div class="ctrl" style="flex:1"><label>시료 농도 <output id="simCOut"></output></label>
-              <input type="range" id="simC" min="0" max="1" step="0.01" value="0.4"></div>
-            <button class="btn ghost" id="simToMax" style="margin-bottom:6px">λmax로 맞추기</button>
-          </div>
-        </div>
-        <div class="col" style="flex:1;gap:12px">
-          <div class="readouts">
-            <div class="ro"><div class="k">입사광 I₀</div><div class="v" id="roI0">100</div></div>
-            <div class="ro"><div class="k">투과광 I</div><div class="v" id="roI">-</div></div>
-            <div class="ro em"><div class="k">투과도 T</div><div class="v" id="roT">-</div></div>
-            <div class="ro em"><div class="k">흡광도 A</div><div class="v" id="roA">-</div></div>
-          </div>
-          <div class="card" style="padding:14px 22px">
-            <p style="font-size:24px;font-family:'Times New Roman',serif;text-align:center"><b>T</b> = I / I₀ &nbsp;&nbsp;&nbsp; <b>A</b> = −log T = log (I₀ / I)</p>
-            <p class="muted" style="font-size:19px;margin-top:6px" id="simNote"></p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- 6. 흡수 스펙트럼, λmax -->
     <section class="slide" data-title="흡수 스펙트럼과 λmax" data-id="spec">
       <h2>흡수 스펙트럼과 최대 흡수 파장 (λ<sub>max</sub>)</h2>
@@ -390,21 +356,20 @@ canvas{display:block;width:100%;height:100%}
       <div class="row" style="flex:1">
         <div class="chart" style="flex:1"><canvas id="specCanvas"></canvas></div>
         <div class="col" style="width:420px;flex:none">
-          <div class="card col" style="gap:12px">
-            <div class="ctrl"><label>시료</label><select class="sample-select"></select></div>
+          <div class="card col" style="gap:10px;padding:16px 20px">
+            <select class="sample-select"></select>
             <div class="btn-row"><button class="btn" id="specScan" style="flex:1">▶ 파장 스캔</button><button class="btn ghost" id="specInstant">바로 보기</button></div>
-            <div class="readouts" style="grid-template-columns:1fr 1fr">
-              <div class="ro"><div class="k">파장 λ</div><div class="v" id="specRoL">-</div></div>
-              <div class="ro em"><div class="k">흡광도 A</div><div class="v" id="specRoA">-</div></div>
+            <div style="display:flex;justify-content:space-around;font-size:20px;font-variant-numeric:tabular-nums">
+              <span class="muted">λ <b id="specRoL" style="color:var(--ink)">-</b></span><span class="muted">A <b id="specRoA" style="color:var(--accent)">-</b></span>
             </div>
           </div>
-          <div class="card" id="specInfo" style="flex:1">
-            <h3>왜 λ<sub>max</sub>에서 측정할까?</h3>
-            <ul>
-              <li><b>감도 최대</b>: 같은 농도 변화에도 흡광도 변화가 가장 큼</li>
-              <li><b>오차 최소</b>: 봉우리 꼭대기는 평평해서 파장이 조금 어긋나도 흡광도가 거의 같음</li>
-              <li>λ<sub>max</sub>는 물질마다 고유 → 물질 확인(정성분석)의 단서</li>
-            </ul>
+          <div class="card" id="specColorCard" style="flex:1;display:flex;flex-direction:column;padding:14px 18px;min-height:0">
+            <h3 style="font-size:22px;margin:0 0 4px">시료의 색과 보색</h3>
+            <div style="display:flex;gap:6px;align-items:center;flex:1;min-height:0">
+              <div class="pd-beaker" style="width:70px;height:96px"><div class="liq" id="specBeaker"></div></div>
+              <div style="flex:1;height:100%;min-height:0"><canvas id="specWheel"></canvas></div>
+            </div>
+            <p id="specColorText" style="font-size:18px;line-height:1.5;margin:4px 0 0"></p>
           </div>
         </div>
       </div>
@@ -434,6 +399,7 @@ canvas{display:block;width:100%;height:100%}
               <button class="btn ghost" id="concClear">지우기</button>
             </div>
             <button class="btn ghost" id="concReveal">관찰 포인트 보기</button>
+            <p class="muted" id="concHint" style="font-size:16px;margin:0">스펙트럼을 3개 이상 고정하면 <b>정량분석 그래프</b>가 나타납니다.</p>
           </div>
           <div class="callout good" id="concPoints" style="display:none;font-size:19px;padding:12px 18px">
             ① 봉우리의 <b>위치(λ<sub>max</sub>)는 변하지 않는다</b><br>
@@ -565,7 +531,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v9 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v10 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -949,24 +915,47 @@ document.getElementById("titleTubes").innerHTML =
   all();
 })();
 
+/* ================= 색상환 공통 도우미 ================= */
+// 흡수 파장 → 색상환 각도(색상). 교과서 보색 표와 맞춘 기준점 (맞은편 = 보이는 색)
+const ANCH = [[400, 270], [435, 245], [480, 200], [510, 160], [530, 125], [570, 80], [585, 55], [605, 30], [650, 0], [700, -10]];
+const lam2hue = l => { l = Math.max(400, Math.min(700, l)); for (let i = 0; i < ANCH.length - 1; i++) { const [l0, h0] = ANCH[i], [l1, h1] = ANCH[i + 1]; if (l <= l1) return (h0 + (h1 - h0) * (l - l0) / (l1 - l0) + 360) % 360; } return 350; };
+const hue2lam = a => { let h = a > 350 ? a - 360 : a; if (h > 270) return null; for (let i = 0; i < ANCH.length - 1; i++) { const [l0, h0] = ANCH[i], [l1, h1] = ANCH[i + 1]; if (h <= h0 && h >= h1) return l0 + (l1 - l0) * (h0 - h) / (h0 - h1); } return null; };
+const hsl = (h, l = 50) => `hsl(${h},95%,${l}%)`;
+// 보색 표 (흡수하는 빛 → 보이는 색)
+const ROWS = [
+  { ab: "보라", r: [400, 435], ob: "연두", oh: 90 }, { ab: "파랑", r: [435, 480], ob: "노랑", oh: 58 },
+  { ab: "청록", r: [480, 510], ob: "빨강", oh: 0 }, { ab: "초록", r: [510, 560], ob: "자홍", oh: 305 },
+  { ab: "연두", r: [560, 580], ob: "보라", oh: 268 }, { ab: "노랑", r: [580, 595], ob: "파랑", oh: 228 },
+  { ab: "주황", r: [595, 620], ob: "청록", oh: 195 }, { ab: "빨강", r: [620, 700], ob: "청록", oh: 182 }];
+ROWS.forEach(r => r.ah = lam2hue((r.r[0] + r.r[1]) / 2));
+const rowOf = l => ROWS.findIndex(r => l < r.r[1] || r === ROWS[ROWS.length - 1]);
+// 색 문자열(rgb) → 색상각
+function hueOf(col) { const c = col.match(/\d+/g).map(v => v / 255), mx = Math.max(...c), mn = Math.min(...c), d = mx - mn;
+  const h = d < 1e-6 ? 0 : mx === c[0] ? ((c[1] - c[2]) / d) % 6 : mx === c[1] ? (c[2] - c[0]) / d + 2 : (c[0] - c[1]) / d + 4; return (h * 60 + 360) % 360; }
+const HUE_NAMES = [["빨강", 0], ["주황", 30], ["노랑", 58], ["연두", 90], ["초록", 125], ["청록", 182], ["파랑", 228], ["보라", 268], ["자홍", 305]];
+function hueName(h) { let best = "", bd = 999; HUE_NAMES.forEach(([n, a]) => { const d = Math.abs(((h - a + 540) % 360) - 180); if (d < bd) { bd = d; best = n; } }); return best; }
+// 작은 연속 색상환: 보이는 색(용액) ↔ 흡수하는 빛(보색)
+function miniWheel(cv, o) {
+  if (!cv || !cv.clientWidth) return;
+  const { ctx, w, h } = prep(cv);
+  const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2 - 34, r0 = R * 0.58;
+  const ang = hu => (hu - 90) * Math.PI / 180, pt = (hu, rr) => [cx + Math.cos(ang(hu)) * rr, cy + Math.sin(ang(hu)) * rr];
+  for (let a = 0; a < 360; a++) { ctx.beginPath(); ctx.arc(cx, cy, R, ang(a), ang(a + 1.3)); ctx.arc(cx, cy, r0, ang(a + 1.3), ang(a), true); ctx.closePath(); ctx.fillStyle = hsl(a); ctx.fill(); }
+  ctx.beginPath(); ctx.arc(cx, cy, r0 - 5, 0, 7); ctx.fillStyle = o.center; ctx.fill(); ctx.strokeStyle = "#cfd5e2"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "#1b2234"; ctx.font = `bold 15px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("용액의 색", cx, cy);
+  const [x1, y1] = pt(o.obs, R), [x2, y2] = pt(o.obs + 180, R);
+  ctx.save(); ctx.setLineDash([6, 5]); ctx.strokeStyle = "rgba(27,34,52,.55)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+  const lab = (hu, txt, bg) => { let [lx, ly] = pt(hu, R + 20); ctx.font = `bold 14px ${FONT}`; const hw = ctx.measureText(txt).width / 2 + 9; lx = Math.max(hw + 2, Math.min(w - hw - 2, lx)); ly = Math.max(13, Math.min(h - 13, ly)); label(ctx, txt, lx, ly, { align: "center", bg, size: 14 }); };
+  const mark = (hu, fill, ring, dash) => { const [x, y] = pt(hu, (R + r0) / 2); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); if (fill) { ctx.fillStyle = fill; ctx.fill(); } ctx.save(); if (dash) ctx.setLineDash([4, 3]); ctx.lineWidth = 4; ctx.strokeStyle = ring; ctx.stroke(); ctx.restore(); };
+  mark(o.obs, hsl(o.obs), "#1b2234"); lab(o.obs, "보이는 색", "#1b2234");
+  if (o.absL != null) { const hu = lam2hue(Math.min(700, o.absL)); mark(hu, hsl(hu), "#c62828"); lab(hu, `흡수 λmax ${o.absL} nm`, "#c62828"); }
+  else { mark(o.obs + 180, null, "#1b2234", true); lab(o.obs + 180, "보색 = 흡수하는 빛?", "#4338ca"); }
+}
+
 /* ================= 4. 보색 예측 활동 · 연속 색상환 ================= */
 (function () {
-  // 흡수 파장 → 색상환 각도(색상). 교과서 보색 표와 맞춘 기준점 (맞은편 = 보이는 색)
-  const ANCH = [[400, 270], [435, 245], [480, 200], [510, 160], [530, 125], [570, 80], [585, 55], [605, 30], [650, 0], [700, -10]];
-  const lam2hue = l => { l = Math.max(400, Math.min(700, l)); for (let i = 0; i < ANCH.length - 1; i++) { const [l0, h0] = ANCH[i], [l1, h1] = ANCH[i + 1]; if (l <= l1) return (h0 + (h1 - h0) * (l - l0) / (l1 - l0) + 360) % 360; } return 350; };
-  const hue2lam = a => { let h = a > 350 ? a - 360 : a; if (h > 270) return null; for (let i = 0; i < ANCH.length - 1; i++) { const [l0, h0] = ANCH[i], [l1, h1] = ANCH[i + 1]; if (h <= h0 && h >= h1) return l0 + (l1 - l0) * (h0 - h) / (h0 - h1); } return null; };
-  const hsl = (h, l = 50) => `hsl(${h},95%,${l}%)`;
-  // 보색 표 (흡수하는 빛 → 보이는 색)
-  const ROWS = [
-    { ab: "보라", r: [400, 435], ob: "연두", oh: 90 }, { ab: "파랑", r: [435, 480], ob: "노랑", oh: 58 },
-    { ab: "청록", r: [480, 510], ob: "빨강", oh: 0 }, { ab: "초록", r: [510, 560], ob: "자홍", oh: 305 },
-    { ab: "연두", r: [560, 580], ob: "보라", oh: 268 }, { ab: "노랑", r: [580, 595], ob: "파랑", oh: 228 },
-    { ab: "주황", r: [595, 620], ob: "청록", oh: 195 }, { ab: "빨강", r: [620, 700], ob: "청록", oh: 182 }];
-  ROWS.forEach(r => r.ah = lam2hue((r.r[0] + r.r[1]) / 2));
-  const rowOf = l => ROWS.findIndex(r => l < r.r[1] || r === ROWS[ROWS.length - 1]);
   // 예측할 용액들
   const SOLS = [
-    { name: "황산 구리(Ⅱ) 수용액", A: l => absorb("cuso4", l, 0.1, 2.5), note: "600 nm부터 흡수가 커지며, 최대는 약 810 nm(근적외선)" },
     { name: "과망가니즈산 칼륨(KMnO₄) 수용액", A: l => absorb("kmno4", l, 0.25, 1.5) },
     { name: "식용색소 청색 1호", A: l => absorb("blue1", l, 5, 1.5) },
     { name: "식용색소 적색 40호", A: l => absorb("red40", l, 25, 1.5) },
@@ -1147,6 +1136,7 @@ function Instrument(host) {
     <radialGradient id="bulb${host.id}" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#fffbe0"/><stop offset=".6" stop-color="#ffe38a"/><stop offset="1" stop-color="#f6c343"/></radialGradient>
     <linearGradient id="white${host.id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset=".25" stop-color="#60a5fa"/><stop offset=".5" stop-color="#86efac"/><stop offset=".75" stop-color="#fde047"/><stop offset="1" stop-color="#fca5a5"/></linearGradient>
   </defs>
+  <g class="hls"><rect class="hlbox" data-h="0" x="20" y="70" width="150" height="310" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/><rect class="hlbox" data-h="1" x="285" y="70" width="160" height="310" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/><rect class="hlbox" data-h="2" x="548" y="70" width="120" height="310" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/><rect class="hlbox" data-h="3" x="728" y="70" width="152" height="310" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/><rect class="hlbox" data-h="4" x="1000" y="70" width="170" height="310" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/><rect class="hlbox" data-h="5" x="1200" y="70" width="270" height="310" rx="18" fill="#eef0ff" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 6"/></g>
   <g class="beams">
     <rect class="beam b-white" x="130" y="${C - 7}" width="215" height="14" fill="url(#white${host.id})" opacity=".85"/>
     <g class="fan beam b-fan"></g>
@@ -1154,29 +1144,29 @@ function Instrument(host) {
     <line class="in-cuv beam b-in" x1="772" y1="${C}" x2="836" y2="${C}" stroke-width="12"/>
     <line class="out-beam beam b-out" x1="836" y1="${C}" x2="1040" y2="${C}" stroke-width="12"/>
   </g>
-  <g class="part" data-p="0">${hl(20, 70, 150, 310)}
+  <g class="part" data-p="0"><rect x="20" y="70" width="150" height="310" fill="transparent"/>
     <circle cx="92" cy="${C}" r="44" fill="url(#bulb${host.id})" stroke="#c59b1c" stroke-width="3"/>
     <path d="M74 ${C + 6} l6 -14 l6 14 l6 -14 l6 14 l6 -14 l6 14" fill="none" stroke="#b45309" stroke-width="3"/>
     <rect x="72" y="${C + 40}" width="40" height="30" rx="4" fill="#94a3b8"/>
     ${lab(92, "광원", "백색광")}</g>
-  <g class="part" data-p="1">${hl(285, 70, 160, 310)}
+  <g class="part" data-p="1"><rect x="285" y="70" width="160" height="310" fill="transparent"/>
     <g class="prism"><polygon points="365,105 425,255 305,255" fill="rgba(186,230,253,.55)" stroke="#5b8db8" stroke-width="3"/></g>
     ${lab(365, "단색화 장치", "프리즘·회절격자")}</g>
-  <g class="part" data-p="2">${hl(548, 70, 120, 310)}
+  <g class="part" data-p="2"><rect x="548" y="70" width="120" height="310" fill="transparent"/>
     <rect x="600" y="52" width="12" height="${C - 8 - 52}" fill="#475569"/>
     <rect x="600" y="${C + 8}" width="12" height="${314 - C - 8}" fill="#475569"/>
     ${lab(606, "슬릿", "단색광 선택")}</g>
-  <g class="part" data-p="3">${hl(728, 70, 152, 310)}
+  <g class="part" data-p="3"><rect x="728" y="70" width="152" height="310" fill="transparent"/>
     <rect class="liq" x="776" y="140" width="56" height="128" fill="#c084fc"/>
     <rect x="770" y="100" width="68" height="172" rx="5" fill="none" stroke="#7b8599" stroke-width="5"/>
     <text x="804" y="292" text-anchor="middle" font-size="16" fill="#5a6478">b = 1 cm</text>
     ${lab(804, "시료(큐벳)", "용액이 빛 흡수")}</g>
-  <g class="part" data-p="4">${hl(1000, 70, 170, 310)}
+  <g class="part" data-p="4"><rect x="1000" y="70" width="170" height="310" fill="transparent"/>
     <rect x="1040" y="140" width="96" height="100" rx="12" fill="#334155"/>
     <circle cx="1060" cy="${C}" r="16" fill="#0ea5e9" stroke="#e0f2fe" stroke-width="3"/>
     <path d="M1136 ${C} H1214" stroke="#334155" stroke-width="4" stroke-dasharray="6 5"/>
     ${lab(1088, "검출기", "빛의 세기 측정")}</g>
-  <g class="part" data-p="5">${hl(1200, 70, 270, 310)}
+  <g class="part" data-p="5"><rect x="1200" y="70" width="270" height="310" fill="transparent"/>
     <rect x="1214" y="100" width="240" height="170" rx="16" fill="#0f172a"/>
     <text class="dA" x="1334" y="165" text-anchor="middle" font-size="40" font-weight="800" fill="#4ade80" font-family="monospace">A 0.000</text>
     <text class="dT" x="1334" y="208" text-anchor="middle" font-size="26" fill="#a5f3fc" font-family="monospace">T 100.0%</text>
@@ -1213,6 +1203,7 @@ function Instrument(host) {
       const BEAMS = [["b-white"], ["b-white", "b-fan", "b-mono"], ["b-fan", "b-mono"], ["b-mono", "b-in", "b-out"], ["b-out"], []];
       const NEAR = [[], [0, 2], [1], [], [], [4]];
       host.classList.toggle("focusing", i >= 0);
+      svg.querySelectorAll(".hlbox").forEach(r => r.classList.toggle("on", +r.dataset.h === i));
       parts.forEach((p, k) => { p.classList.toggle("focus", k === i); p.classList.toggle("near", i >= 0 && NEAR[i].includes(k)); });
       svg.querySelectorAll(".beam").forEach(b => b.classList.toggle("lit", i >= 0 && BEAMS[i].some(c => b.classList.contains(c))));
     },
@@ -1247,33 +1238,6 @@ function Instrument(host) {
     else ex.innerHTML = `<div class="num">${s + 1}</div><div><h3>${PARTS[s].n}</h3><p>${PARTS[s].d}</p></div>`;
   }
   set(-1);
-})();
-
-/* ================= 5. 시뮬레이션 ================= */
-(function () {
-  const inst = Instrument(document.getElementById("instSim"));
-  const sl = document.getElementById("simL");
-  function upd() {
-    const k = state.sample, l = state.simL, c = state.conc[k];
-    const blank = state.simCuv === "blank";
-    const A = blank ? 0 : absorb(k, l, c), T = Math.pow(10, -A);
-    inst.update({ l, liq: blank ? "#e8f3ff" : solColor(k, c, 1), T });
-    document.getElementById("simLOut").textContent = `${Math.round(l)} nm (${colorName(l)})`;
-    document.getElementById("roI").textContent = (100 * T).toFixed(1);
-    document.getElementById("roT").textContent = (100 * T).toFixed(1) + "%";
-    document.getElementById("roA").textContent = A > 3 ? ">3" : A.toFixed(3);
-    const s = curS();
-    document.getElementById("simNote").innerHTML = blank
-      ? "바탕 용액(물)은 빛을 흡수하지 않으므로 I = I₀ → T = 100%, A = 0. 이것이 측정의 기준(영점)입니다."
-      : `${s.short}의 λ<sub>max</sub>는 약 ${s.lmax} nm. 파장과 농도를 바꾸며 T와 A가 어떻게 변하는지 관찰하세요.`;
-  }
-  sl.addEventListener("input", () => { state.simL = +sl.value; upd(); });
-  concSyncs.push(bindConc("simC", "simCOut", upd));
-  document.getElementById("simToMax").onclick = () => { state.simL = curS().lmax; sl.value = state.simL; upd(); };
-  document.querySelectorAll("#simCuv button").forEach(b => b.onclick = () => {
-    state.simCuv = b.dataset.v; document.querySelectorAll("#simCuv button").forEach(x => x.classList.toggle("on", x === b)); upd();
-  });
-  renderers.sim = () => { sl.value = state.simL; upd(); };
 })();
 
 /* ================= 6. 흡수 스펙트럼 스캔 ================= */
@@ -1318,6 +1282,14 @@ function Instrument(host) {
     }
     ctx.fillStyle = "#1b2234"; ctx.font = `bold 18px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "top";
     ctx.fillText(`${s.short}  ${fmtC(k, c)}  ·  b = 1 cm`, ax.box.x + 12, ax.box.y + 8);
+    // 시료의 색과 보색
+    const sc = solColor(k, c), obs = hueOf(sc);
+    document.getElementById("specBeaker").style.background = sc;
+    miniWheel(document.getElementById("specWheel"), { center: sc, obs, absL: scanned ? s.lmax : null });
+    const absName = s.lmax > 700 ? "빨강(~근적외선)" : ROWS[rowOf(s.lmax)].ab;
+    document.getElementById("specColorText").innerHTML = scanned
+      ? `<b>${hueName(obs)}</b>색 용액 → 보색인 <b>${absName}</b> 빛을 흡수<br>→ λ<sub>max</sub> = <b>${s.lmax} nm</b>${s.lmax > 700 ? " (근적외선)" : ""}`
+      : `<b>${hueName(obs)}</b>색 용액은 맞은편(보색) 빛을 흡수할 거예요.<br><span class="muted">파장 스캔으로 확인해 보세요!</span>`;
     const show = scanned ? hover : scanL;
     document.getElementById("specRoL").textContent = show != null ? Math.round(show) + " nm" : "-";
     document.getElementById("specRoA").textContent = show != null ? f(show).toFixed(3) : "-";
@@ -1337,40 +1309,103 @@ function Instrument(host) {
   renderers.spec = draw;
 })();
 
-/* ================= 7. 농도별 스펙트럼 ================= */
+/* ================= 7. 농도별 스펙트럼 + 정량분석 그래프 ================= */
 (function () {
   const cv = document.getElementById("concCanvas");
   const PAL = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#14b8a6", "#f97316", "#64748b"];
+  const ins = { pos: {}, anim: new Map(), rect: null, drag: null, raf: 0 };
+  const DUR = 1300, ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const colOf = tc => PAL[state.traces.indexOf(tc) % PAL.length];
+  function insetRect(ax, s) {
+    const W = Math.min(400, ax.box.w * 0.44), H = Math.min(300, ax.box.h * 0.6);
+    const p = ins.pos[state.sample];
+    let x, y;
+    if (p) { x = ax.box.x + p.fx * ax.box.w; y = ax.box.y + p.fy * ax.box.h; }
+    else { const right = s.lmax < 650; x = right ? ax.box.x + ax.box.w - W - 8 : ax.box.x + 8; y = ax.box.y + 34; }
+    x = Math.max(ax.box.x, Math.min(ax.box.x + ax.box.w - W, x)); y = Math.max(ax.box.y, Math.min(ax.box.y + ax.box.h - H, y));
+    return { x, y, w: W, h: H };
+  }
   function draw() {
     const k = state.sample, s = curS(), c = state.conc[k];
     document.getElementById("concTube").style.background = solColor(k, c);
     document.getElementById("concRoA").textContent = absorb(k, s.lmax, c).toFixed(3);
+    const showInset = state.traces.length >= 3;
+    document.getElementById("concHint").innerHTML = showInset ? "정량분석 그래프는 <b>끌어서 위치를 옮길 수</b> 있어요." : "스펙트럼을 3개 이상 고정하면 <b>정량분석 그래프</b>가 나타납니다.";
+    if (!showInset) ins.anim.clear();
     if (!cv.clientWidth) return;
     const { ctx, w, h } = prep(cv);
     const ax = spectrumFrame(ctx, w, h, niceMax(absorb(k, s.lmax, s.cmax) * 1.08));
     ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(ax.X(s.lmax), ax.box.y); ctx.lineTo(ax.X(s.lmax), ax.box.y + ax.box.h); ctx.stroke(); ctx.restore();
     label(ctx, `λmax ${s.lmax} nm`, ax.X(s.lmax), ax.box.y + 16, { bg: "#c62828", size: 16, align: "center" });
-    const sorted = state.traces.slice().sort((a, b) => b - a);
-    sorted.forEach((tc, i) => {
-      const col = PAL[state.traces.indexOf(tc) % PAL.length];
+    state.traces.slice().sort((a, b) => b - a).forEach(tc => {
+      const col = colOf(tc);
       strokeCurve(ctx, ax, l => absorb(k, l, tc), LMIN, LMAX, col, 2.5);
-      const y = ax.Y(absorb(k, s.lmax, tc)); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ax.X(s.lmax), y, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ax.X(s.lmax), ax.Y(absorb(k, s.lmax, tc)), 6, 0, 7); ctx.fill();
     });
     strokeCurve(ctx, ax, l => absorb(k, l, c), LMIN, LMAX, "#1b2234", 4, [10, 6]);
-    // 범례
+    // 범례: 흡수가 거의 없는 아래쪽 구석
+    const right = s.lmax < 650;
+    const legend = [["현재 " + fmtC(k, c), "#1b2234", true], ...state.traces.slice().sort((a, b) => a - b).map(tc => [fmtC(k, tc), colOf(tc), false])];
     ctx.font = `bold 17px ${FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    let ly = ax.box.y + 18; const lx = s.lmax > 650 ? ax.box.x + 20 : ax.box.x + ax.box.w - 190;
-    const legend = [["현재", "#1b2234", c, true], ...state.traces.slice().sort((a, b) => a - b).map(tc => [fmtC(k, tc), PAL[state.traces.indexOf(tc) % PAL.length], tc])];
-    legend.forEach(([t, col, cc, dash]) => {
+    const lx = right ? ax.box.x + ax.box.w - 200 : ax.box.x + 18; let ly = ax.box.y + ax.box.h - 18 - 26 * (legend.length - 1);
+    legend.forEach(([t, col, dash]) => {
       ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.setLineDash(dash ? [8, 5] : []); ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 34, ly); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = "#1b2234"; ctx.fillText(dash ? `현재 ${fmtC(k, cc)}` : t, lx + 44, ly); ly += 28;
+      ctx.fillStyle = "#1b2234"; ctx.fillText(t, lx + 44, ly); ly += 26;
     });
+    ins.rect = null;
+    if (!showInset) return;
+    // ---- 정량분석 그래프 ----
+    const now = performance.now();
+    const order = state.traces.slice().sort((a, b) => a - b);
+    let stagger = 0;
+    order.forEach(tc => { if (!ins.anim.has(tc)) { ins.anim.set(tc, now + stagger); stagger += 160; } });
+    const r = insetRect(ax, s); ins.rect = r;
+    ctx.save(); ctx.shadowColor = "rgba(27,34,52,.22)"; ctx.shadowBlur = 16; ctx.shadowOffsetY = 4; ctx.fillStyle = "rgba(255,255,255,.97)";
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(r.x, r.y, r.w, r.h, 14) : ctx.rect(r.x, r.y, r.w, r.h); ctx.fill(); ctx.restore();
+    ctx.strokeStyle = "#a5b4fc"; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(r.x, r.y, r.w, r.h, 14) : ctx.rect(r.x, r.y, r.w, r.h); ctx.stroke();
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 17px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(`정량분석 그래프 (λ = ${s.lmax} nm)`, r.x + 14, r.y + 18);
+    ctx.fillStyle = "#8a93a6"; ctx.font = `14px ${FONT}`; ctx.textAlign = "right"; ctx.fillText("✥ 끌어서 이동", r.x + r.w - 12, r.y + 18);
+    const ib = { x: r.x + 62, y: r.y + 62, w: r.w - 82, h: r.h - 62 - 62 };
+    const ymax = niceMax(absorb(k, s.lmax, s.cmax) * 1.05);
+    const ax2 = axes(ctx, ib, [0, s.cmax], [0, ymax], { xStep: s.cmax / 5, yStep: niceStep(ymax, 4), xFmt: v => +v.toFixed(s.digits), yFmt: v => +v.toFixed(2), xLabel: `농도 (${s.unit})`, xOffset: 6 });
+    ctx.fillStyle = "#1b2234"; ctx.font = `bold 16px ${FONT}`; ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText("흡광도 A", ib.x - 48, ib.y - 4);
+    let done = true;
+    order.forEach(tc => {
+      const p = Math.max(0, Math.min(1, (now - ins.anim.get(tc)) / DUR)), e = ease(p); if (p < 1) done = false;
+      const A = absorb(k, s.lmax, tc);
+      const x0 = ax.X(s.lmax), y0 = ax.Y(A), x1 = ax2.X(tc), y1 = ax2.Y(A);
+      const arc = Math.sin(Math.PI * e) * 40;   // 살짝 곡선을 그리며 이동
+      const x = x0 + (x1 - x0) * e, y = y0 + (y1 - y0) * e - arc;
+      ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fillStyle = colOf(tc); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.stroke();
+    });
+    if (done) {
+      const sxy = order.reduce((a, tc) => a + tc * absorb(k, s.lmax, tc), 0), sxx = order.reduce((a, tc) => a + tc * tc, 0), m = sxy / sxx;
+      ctx.save(); ctx.beginPath(); ctx.rect(ib.x, ib.y, ib.w, ib.h); ctx.clip();
+      ctx.strokeStyle = "rgba(67,56,202,.8)"; ctx.lineWidth = 2.5; ctx.setLineDash([7, 5]); ctx.beginPath(); ctx.moveTo(ax2.X(0), ax2.Y(0)); ctx.lineTo(ax2.X(s.cmax), ax2.Y(m * s.cmax)); ctx.stroke(); ctx.restore();
+      label(ctx, "흡광도 ∝ 농도 (직선)", ib.x + 8, ib.y + 14, { bg: "#4338ca", size: 14 });
+    } else { cancelAnimationFrame(ins.raf); ins.raf = requestAnimationFrame(draw); }
   }
+  // 정량분석 그래프 끌어서 옮기기
+  cv.style.touchAction = "none";
+  cv.addEventListener("pointerdown", e => {
+    const r = ins.rect; if (!r) return; const p = evtPos(cv, e);
+    if (p.x < r.x || p.x > r.x + r.w || p.y < r.y || p.y > r.y + r.h) return;
+    ins.drag = { dx: p.x - r.x, dy: p.y - r.y }; cv.setPointerCapture?.(e.pointerId); cv.style.cursor = "grabbing";
+  });
+  cv.addEventListener("pointermove", e => {
+    const p = evtPos(cv, e), r = ins.rect;
+    if (!ins.drag) { cv.style.cursor = r && p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h ? "grab" : "default"; return; }
+    const bx = 88, by = 24, bw = cv.clientWidth - 118, bh = cv.clientHeight - 112;
+    ins.pos[state.sample] = { fx: (p.x - ins.drag.dx - bx) / bw, fy: (p.y - ins.drag.dy - by) / bh }; draw();
+  });
+  const endDrag = () => { if (ins.drag) { ins.drag = null; cv.style.cursor = "grab"; } };
+  cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
   concSyncs.push(bindConc("concC", "concOut", draw));
   document.getElementById("concAdd").onclick = () => { const c = state.conc[state.sample]; if (!state.traces.some(t => Math.abs(t - c) < 1e-9)) state.traces.push(c); draw(); };
-  document.getElementById("concPreset").onclick = () => { const m = curS().cmax; state.traces = [0.2, 0.4, 0.6, 0.8, 1].map(f => +(f * m).toFixed(6)); draw(); };
-  document.getElementById("concClear").onclick = () => { state.traces = []; draw(); };
+  document.getElementById("concPreset").onclick = () => { const m = curS().cmax; state.traces = [0.2, 0.4, 0.6, 0.8, 1].map(f => +(f * m).toFixed(6)); ins.anim.clear(); draw(); };
+  document.getElementById("concClear").onclick = () => { state.traces = []; ins.anim.clear(); draw(); };
   document.getElementById("concReveal").onclick = e => { const p = document.getElementById("concPoints"); const on = p.style.display === "none"; p.style.display = on ? "block" : "none"; e.target.textContent = on ? "관찰 포인트 숨기기" : "관찰 포인트 보기"; };
   renderers.conc = draw;
 })();
