@@ -51,7 +51,7 @@ select{font:inherit}
 .cmp-table .sw{display:inline-block;width:18px;height:18px;border-radius:5px;vertical-align:-3px;margin-right:6px;border:1px solid rgba(0,0,0,.2)}
 .pd-step{font-size:19px;font-weight:800;color:var(--muted)}
 .pd-head{display:flex;gap:16px;align-items:center}
-.pd-beaker{width:120px;height:140px;border:4px solid #aab3c5;border-top:none;border-radius:0 0 18px 18px;position:relative;overflow:hidden;background:#fff;flex:none}
+.pd-beaker{width:190px;height:230px;border:4px solid #aab3c5;border-top:none;border-radius:0 0 18px 18px;position:relative;overflow:hidden;background:#fff;flex:none}
 .pd-beaker .liq{position:absolute;left:0;right:0;bottom:0;height:78%}
 #pdCard .pd-fb{font-size:22px;line-height:1.6;border-radius:12px;padding:16px 20px;margin:0}
 
@@ -535,7 +535,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v13 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v14 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -1037,7 +1037,7 @@ function miniWheel(cv, o) {
         <div class="ctrl"><label>흡수되는 빛의 파장 <output>${st.freeL} nm</output></label>
           <input type="range" id="pdFreeL" min="400" max="700" step="1" value="${st.freeL}" style="background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)"></div>
         <p class="muted" style="font-size:17px">색상환의 링을 직접 눌러도 됩니다.</p>
-        <div class="pd-head" style="gap:24px"><div class="pd-beaker" style="width:130px;height:150px"><div class="liq" style="background:${colorOf(l => 1.3 * gs(l, st.freeL, 32))}"></div></div>
+        <div class="pd-head" style="gap:28px"><div class="pd-beaker"><div class="liq" style="background:${colorOf(l => 1.3 * gs(l, st.freeL, 32))}"></div></div>
           <p style="font-size:22px;line-height:1.6;margin:0"><b>${r.ab}</b> 빛(약 ${st.freeL} nm)을 흡수하면<br>나머지 빛이 섞여 <b>${r.ob}</b> 계열로 보입니다.<br><span class="muted" style="font-size:18px">흡수한 색과 보이는 색은 색상환의 맞은편 = 보색</span></p></div>
         <div class="callout" style="margin-top:auto">그래서 분광광도계로 측정할 때는 <b>용액 색의 보색에 해당하는 파장</b> 근처의 빛을 사용합니다.</div>`;
       const fl = card.querySelector("#pdFreeL"); fl.oninput = () => { st.freeL = +fl.value; draw(); };
@@ -1059,12 +1059,11 @@ function miniWheel(cv, o) {
     }
     card.innerHTML = `
       <div class="pd-head">
-        <div class="pd-beaker"><div class="liq" style="background:${s.color}"></div></div>
+        <div class="pd-beaker" style="border-width:5px;border-radius:0 0 28px 28px"><div class="liq" style="background:${s.color}"></div></div>
         <div style="flex:1"><div style="font-size:32px;font-weight:800">용액 ${tag} <span class="muted" style="font-size:17px">(${st.i + 1} / ${SOLS.length})</span></div>
           <div style="font-size:23px;margin-top:6px">이 용액은 어떤 색의 빛을 흡수할까?</div></div>
         <button class="btn ghost" id="pdHint" style="flex:none">${st.hint ? "힌트 끄기" : "💡 힌트"}</button>
       </div>
-      <div class="callout info" style="font-size:20px;padding:12px 18px">왼쪽 색상환에서 <b>용액 색의 맞은편(보색)</b>을 눌러 흡수할 빛을 고르세요.<br><span class="muted" style="font-size:18px">슬라이더로 파장을 세밀하게 조정할 수도 있어요.</span></div>
       <div class="ctrl"><label class="pd-step" style="display:flex">흡수 파장 예측 <span style="margin-left:14px;color:var(--ink)">${st.pred != null ? ROWS[rowOf(st.pred)].ab + " 빛" : ""}</span><output style="margin-left:auto">${st.pred != null ? Math.round(st.pred) + " nm" : "-"}</output></label>
         <input type="range" id="pdL" min="400" max="700" step="1" value="${st.pred ?? 550}" ${st.revealed ? "disabled" : ""} style="margin:4px 0;background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)"></div>
       <div class="btn-row"><button class="btn" id="pdCheck" ${st.pred == null || st.revealed ? "disabled" : ""}>정답 확인</button>
