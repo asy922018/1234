@@ -249,7 +249,7 @@ canvas{display:block;width:100%;height:100%}
         </div>
         <div class="card col" style="flex:1;align-items:center;justify-content:center">
           <h3 style="align-self:flex-start">눈으로 농도를 맞힐 수 있을까?</h3>
-          <p class="muted" style="align-self:flex-start">KMnO₄ 수용액 5개 (순서는 무작위)</p>
+          <p class="muted" style="align-self:flex-start">황산 구리(Ⅱ) 수용액 5개 (순서는 무작위)</p>
           <div id="quantTubes" style="display:flex;gap:26px;margin:24px 0 18px"></div>
           <div class="btn-row">
             <button class="btn" id="quantReveal">농도 공개</button>
@@ -268,14 +268,14 @@ canvas{display:block;width:100%;height:100%}
         <div class="col" style="flex:1">
           <div class="card">
             <div class="ctrl">
-              <label>흡수되는 빛의 파장 <output id="wheelOut">525 nm</output></label>
-              <input type="range" class="rainbow" id="wheelL" min="400" max="700" step="1" value="525" style="background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)">
+              <label>흡수되는 빛의 파장 <output id="wheelOut">640 nm</output></label>
+              <input type="range" class="rainbow" id="wheelL" min="400" max="700" step="1" value="640" style="background:linear-gradient(90deg,#6d28d9,#2563eb 25%,#06b6d4 33%,#22c55e 45%,#eab308 60%,#f97316 70%,#dc2626 80%,#b91c1c)">
             </div>
             <div class="btn-row" style="margin-top:6px">
+              <button class="btn soft" data-wl="640">CuSO₄ (빨강 흡수)</button>
               <button class="btn soft" data-wls="kmno4"></button>
               <button class="btn soft" data-wls="blue1"></button>
               <button class="btn soft" data-wls="red40"></button>
-              <button class="btn soft" data-wl="430">노란 용액 (430 nm)</button>
             </div>
           </div>
           <div class="row" style="gap:20px">
@@ -313,7 +313,7 @@ canvas{display:block;width:100%;height:100%}
               <div class="seg" id="simCuv"><button data-v="blank">바탕 용액(물)</button><button data-v="sample" class="on">시료 용액</button></div></div>
           </div>
           <div class="ctrl"><label>측정 파장 λ <output id="simLOut"></output></label>
-            <input type="range" class="rainbow" id="simL" min="380" max="900" step="1" value="500"></div>
+            <input type="range" class="rainbow" id="simL" min="380" max="900" step="1" value="650"></div>
           <div class="row" style="gap:20px;align-items:flex-end">
             <div class="ctrl" style="flex:1"><label>시료 농도 <output id="simCOut"></output></label>
               <input type="range" id="simC" min="0" max="1" step="0.01" value="0.4"></div>
@@ -501,7 +501,7 @@ canvas{display:block;width:100%;height:100%}
       <h2>정리</h2>
       <div class="sum-grid" style="margin-top:16px">
         <div class="card"><h3><span class="tag">1</span>정량분석</h3><p>물질의 <b>양·농도</b>를 숫자로 측정하는 분석. 분광 분석은 빛의 흡수를 이용한다.</p></div>
-        <div class="card"><h3><span class="tag">2</span>색과 보색</h3><p>용액은 특정 색의 빛을 흡수하고 그 <b>보색</b>으로 보인다. (KMnO₄: 초록 흡수 → 보라)</p></div>
+        <div class="card"><h3><span class="tag">2</span>색과 보색</h3><p>용액은 특정 색의 빛을 흡수하고 그 <b>보색</b>으로 보인다. (CuSO₄: 빨강 흡수 → 청록)</p></div>
         <div class="card"><h3><span class="tag">3</span>분광광도계</h3><p>광원 → 단색화 장치 → 슬릿 → 시료(큐벳) → 검출기 → 표시부</p></div>
         <div class="card"><h3><span class="tag">4</span>T와 A</h3><p>T = I/I₀, &nbsp;A = −log T.<br>투과도가 작을수록 흡광도는 크다.</p></div>
         <div class="card"><h3><span class="tag">5</span>λ<sub>max</sub></h3><p>흡광도가 가장 큰 파장. 농도가 변해도 위치는 그대로, <b>높이만 농도에 비례</b>.</p></div>
@@ -530,10 +530,10 @@ const LMIN = 380, LMAX = 900, VIS_MAX = 780;
 const gs = (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2);
 
 const SAMPLES = {
+  cuso4: { label: "황산 구리(Ⅱ) (CuSO₄)", short: "CuSO₄", unit: "M", toM: 1, cmax: 0.1, digits: 3, eps: 12, tubeB: 2.5,
+    raw: l => gs(l,810,125) },
   kmno4: { label: "과망가니즈산 칼륨 (KMnO₄)", short: "KMnO₄", unit: "mM", toM: 1e-3, cmax: 0.5, digits: 2, eps: 2400,
     raw: l => 0.07*gs(l,640,45) + 0.30*gs(l,580,26) + 0.30*gs(l,525,42) + 0.36*gs(l,488,10) + 0.62*gs(l,507,10) + 0.88*gs(l,526,10) + 0.80*gs(l,546,10) + 0.40*gs(l,566,11) },
-  cuso4: { label: "황산 구리(Ⅱ) (CuSO₄)", short: "CuSO₄", unit: "M", toM: 1, cmax: 0.1, digits: 3, eps: 12,
-    raw: l => gs(l,810,125) },
   blue1: { label: "식용색소 청색 1호", short: "청색 1호", unit: "µM", toM: 1e-6, cmax: 10, digits: 1, eps: 130000,
     raw: l => 0.92*gs(l,630,23) + 0.28*gs(l,588,22) + 0.07*gs(l,410,25) },
   red40: { label: "식용색소 적색 40호", short: "적색 40호", unit: "µM", toM: 1e-6, cmax: 50, digits: 1, eps: 25000,
@@ -564,7 +564,7 @@ function rgbLin(absFn) {
 const WHITE = rgbLin(() => 0);
 const gam = v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055)); };
 function colorOf(absFn) { const c = rgbLin(absFn); return `rgb(${gam(c[0]/WHITE[0])},${gam(c[1]/WHITE[1])},${gam(c[2]/WHITE[2])})`; }
-function solColor(key, c, b = 1.5) { return colorOf(l => absorb(key, l, c, b)); }
+function solColor(key, c, b = SAMPLES[key].tubeB || 1.5) { return colorOf(l => absorb(key, l, c, b)); }
 
 /* 파장 → 빛의 색 */
 function wlRGB(l) {
@@ -588,9 +588,9 @@ function colorName(l) {
 
 /* ================= 상태 ================= */
 const state = {
-  sample: "kmno4",
+  sample: "cuso4",
   conc: { kmno4: 0.2, cuso4: 0.06, blue1: 5, red40: 25 },
-  simL: 500, simCuv: "sample",
+  simL: 650, simCuv: "sample",
   traces: [],
   b: 1,
 };
@@ -773,9 +773,10 @@ function bindConc(id, outId, onChange) {
 const concSyncs = [];
 
 /* ================= 1. 표지 ================= */
+const TUBE_B = 2.5; // 시험관 그림은 빛이 지나는 길이를 길게 잡아 색을 잘 보이게
 function tubeHTML(color, extra = "") { return `<div class="tube" ${extra}><div class="liq" style="background:${color}"></div></div>`; }
 document.getElementById("titleTubes").innerHTML =
-  [0.05, 0.1, 0.2, 0.3, 0.45].map((c, i) => `<div style="transform:translateY(${[0, -20, -6, -26, -10][i]}px)">${tubeHTML(solColor("kmno4", c, 2))}</div>`).join("");
+  [0.02, 0.04, 0.06, 0.08, 0.1].map((c, i) => `<div style="transform:translateY(${[0, -20, -6, -26, -10][i]}px)">${tubeHTML(solColor("cuso4", c, TUBE_B))}</div>`).join("");
 
 /* ================= 2. 정량분석 ================= */
 (function () {
@@ -789,7 +790,7 @@ document.getElementById("titleTubes").innerHTML =
     document.getElementById("quantMsg").className = "callout info";
   }
   function draw() {
-    wrap.innerHTML = order.map((c, i) => `<div class="tube-wrap"><div class="name">${"ABCDE"[i]}</div>${tubeHTML(solColor("kmno4", c, 1.5))}<div class="val">${revealed ? c.toFixed(2) + " mM" : "? mM"}</div></div>`).join("");
+    wrap.innerHTML = order.map((c, i) => `<div class="tube-wrap"><div class="name">${"ABCDE"[i]}</div>${tubeHTML(solColor("cuso4", c, TUBE_B))}<div class="val">${revealed ? c.toFixed(2) + " M" : "? M"}</div></div>`).join("");
   }
   document.getElementById("quantShuffle").onclick = shuffle;
   document.getElementById("quantReveal").onclick = () => {
@@ -841,7 +842,7 @@ document.getElementById("titleTubes").innerHTML =
   }
   sl.addEventListener("input", draw);
   document.querySelectorAll("[data-wls]").forEach(b => { const sm = SAMPLES[b.dataset.wls]; b.dataset.wl = sm.lmax; b.textContent = `${sm.short} (${sm.lmax} nm)`; });
-  sl.value = SAMPLES.kmno4.lmax;
+  sl.value = 640;
   document.querySelectorAll("[data-wl]").forEach(b => b.onclick = () => { sl.value = b.dataset.wl; draw(); });
   renderers.wheel = draw;
 })();
@@ -945,7 +946,7 @@ function Instrument(host) {
     else ex.innerHTML = `<div class="num">${s + 1}</div><div><h3>${PARTS[s].n}</h3><p>${PARTS[s].d}</p></div>`;
   }
   set(-1);
-  inst.update({ l: 525, liq: solColor("kmno4", 0.2, 1), T: Math.pow(10, -absorb("kmno4", 525, 0.2)) });
+  inst.update({ l: 650, liq: solColor("cuso4", 0.06, 1), T: Math.pow(10, -absorb("cuso4", 650, 0.06)) });
 })();
 
 /* ================= 5. 시뮬레이션 ================= */
@@ -1042,7 +1043,7 @@ function Instrument(host) {
   const PAL = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#14b8a6", "#f97316", "#64748b"];
   function draw() {
     const k = state.sample, s = curS(), c = state.conc[k];
-    document.getElementById("concTube").style.background = solColor(k, c, 1.5);
+    document.getElementById("concTube").style.background = solColor(k, c);
     document.getElementById("concRoA").textContent = absorb(k, s.lmax, c).toFixed(3);
     if (!cv.clientWidth) return;
     const { ctx, w, h } = prep(cv);
@@ -1151,10 +1152,10 @@ function Instrument(host) {
     const k = state.sample, s = curS(), d = s.digits + 1;
     document.getElementById("calTubes").innerHTML = FR.map((f, i) => `
       <button class="cal-tube ${cal.measured[i] ? "done" : ""}" data-i="${i}">
-        <div class="tube"><div class="liq" style="background:${solColor(k, stdC(i), 1.5)}"></div></div>
+        <div class="tube"><div class="liq" style="background:${solColor(k, stdC(i))}"></div></div>
         <div class="lbl">${stdC(i).toFixed(s.digits)} ${s.unit}</div><div class="a">${cal.measured[i] ? "A " + stdA(i).toFixed(3) : "측정 전"}</div></button>`).join("") +
       `<button class="cal-tube unknown ${cal.uMeasured ? "done" : ""}" data-i="u">
-        <div class="tube"><div class="liq" style="background:${solColor(k, cal.uc, 1.5)}"></div></div>
+        <div class="tube"><div class="liq" style="background:${solColor(k, cal.uc)}"></div></div>
         <div class="lbl">미지 시료 ?</div><div class="a">${cal.uMeasured ? "A " + uA().toFixed(3) : "측정 전"}</div></button>`;
     const nMeas = cal.measured.filter(Boolean).length;
     document.getElementById("calFit").disabled = nMeas < 2;
@@ -1219,7 +1220,7 @@ function Instrument(host) {
 (function () {
   const Q = [
     { q: "다음 중 <b>정량분석</b>에 해당하는 것은?", o: ["용액에 Cu²⁺이 들어 있는지 확인한다", "음료 속 색소의 농도를 측정한다", "불꽃 반응색으로 원소를 확인한다", "앙금이 생기는지 관찰한다"], a: 1, e: "정량분석은 ‘얼마나’ 들어 있는지를 숫자로 측정하는 것입니다. 나머지는 ‘무엇이’ 있는지 확인하는 정성분석입니다." },
-    { q: "보라색으로 보이는 KMnO₄ 수용액이 가장 많이 흡수하는 빛의 색은?", o: ["빨강", "초록", "보라", "파랑"], a: 1, e: "용액은 흡수한 빛의 보색으로 보입니다. 보라(자주)색의 보색은 초록 → λmax ≈ 525 nm" },
+    { q: "청록색으로 보이는 황산 구리(Ⅱ) 수용액이 가장 많이 흡수하는 가시광선의 색은?", o: ["빨강", "초록", "보라", "파랑"], a: 0, e: "용액은 흡수한 빛의 보색으로 보입니다. 청록색의 보색은 빨강 → 황산 구리(Ⅱ)는 빨간빛~근적외선을 흡수합니다 (λmax ≈ 810 nm)" },
     { q: "흡광도를 <b>λmax</b>에서 측정하는 이유로 옳은 것은?", o: ["감도가 크고, 파장이 조금 어긋나도 오차가 작다", "빛이 가장 많이 투과되기 때문이다", "흡광도가 농도와 무관해지기 때문이다", "모든 물질의 λmax가 같기 때문이다"], a: 0, e: "λmax에서는 같은 농도 변화에 흡광도 변화가 가장 크고(감도 최대), 봉우리 꼭대기가 평평해 파장 오차의 영향이 작습니다." },
     { q: "같은 큐벳과 같은 파장에서 용액의 농도를 <b>2배</b>로 하면 흡광도는?", o: ["절반이 된다", "변하지 않는다", "2배가 된다", "4배가 된다"], a: 2, e: "람베르트–비어 법칙 A = εbc 에서 ε, b가 같으면 A는 c에 비례합니다." },
     { q: "어떤 용액의 투과도(T)가 <b>10%</b>일 때 흡광도(A)는?", o: ["0.1", "1", "10", "90"], a: 1, e: "A = −log T = −log 0.10 = 1" },
