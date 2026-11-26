@@ -69,19 +69,24 @@ select{font:inherit}
 .frac span:last-child{padding:4px 10px 0}
 .editable{outline:none;border-radius:10px;padding:2px 10px;margin-left:-10px}
 .editable:hover,.editable:focus{background:#fff8d6}
-.todo-list{font-size:46px;line-height:1.75;color:#4b5563;margin:16px 0 0;padding-left:70px}
+.todo-list{font-size:50px;line-height:1.75;color:#4b5563;margin:8px 0 0;padding-left:80px}
 .todo-list li{padding:0 10px;border-radius:10px;outline:none}
 .todo-list li:hover,.todo-list li:focus{background:#fff8d6}
 .photo-row{flex:1;display:flex;align-items:center;justify-content:center;gap:90px}
 .photo-row img{height:560px;width:auto;object-fit:contain}
 .use-steps{font-size:36px;line-height:2.2;margin:0;padding-left:44px}
-.qd-text{font-size:23px;line-height:1.7;margin:4px 0 10px}
+.qd-big{font-size:54px;line-height:1.6;margin:0}
+.qd-flow{display:flex;align-items:center;justify-content:center;gap:18px;font-size:50px;flex-wrap:wrap}
+.qd-flow i{font-style:normal;color:var(--accent);font-weight:800}
+.qd-flow .blank{min-width:240px}
+.qd-eq{font-size:44px;margin:0}
+.qd-left .blank.sm{min-width:120px}
 .blank{font:inherit;min-width:150px;height:1.5em;vertical-align:middle;border:none;border-bottom:3px solid var(--ink);background:#fff8d6;border-radius:6px 6px 0 0;color:transparent;cursor:pointer;padding:0 10px}
 .blank.sm{min-width:80px}
 .blank:hover{background:#ffef9e}
 .blank.show{color:#c62828;font-weight:800;background:#fdecec}
-.qd-table{border-collapse:collapse;font-size:22px;width:100%;background:#fff}
-.qd-table th,.qd-table td{border:2px solid #4b5563;padding:6px 12px;text-align:center}
+.qd-table{border-collapse:collapse;font-size:40px;width:100%;background:#fff}
+.qd-table th,.qd-table td{border:3px solid #4b5563;padding:6px 14px;text-align:center}
 .qd-table th{font-weight:600}
 /* ---- 판서 ---- */
 #inkCanvas{position:absolute;inset:0;z-index:15;pointer-events:none;touch-action:none}
@@ -373,12 +378,14 @@ canvas{display:block;width:100%;height:100%}
 
     <!-- 오늘의 할 일 (편집·저장) -->
     <section class="slide" data-title="오늘의 할 일" data-id="todo">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
-        <h2 id="todoTitle" class="editable" contenteditable="true" spellcheck="false"></h2>
-        <span class="muted" id="todoSaved" style="font-size:17px">✏️ 글자를 눌러 고칠 수 있어요 · 자동 저장</span>
+      <span class="muted" id="todoSaved" style="font-size:17px;position:absolute;top:30px;right:56px">✏️ 글자를 눌러 고칠 수 있어요 · 자동 저장</span>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0">
+        <div>
+          <h2 id="todoTitle" class="editable" contenteditable="true" spellcheck="false" style="font-size:60px;margin-bottom:10px"></h2>
+          <ol id="todoList" class="todo-list"></ol>
+        </div>
       </div>
-      <ol id="todoList" class="todo-list"></ol>
-      <div class="btn-row" style="margin-top:auto">
+      <div class="btn-row">
         <button class="btn soft" id="todoAdd">＋ 항목 추가</button>
         <button class="btn ghost" id="todoDel">－ 마지막 항목 삭제</button>
         <button class="btn ghost" id="todoReset" style="margin-left:auto">처음 내용으로</button>
@@ -433,35 +440,43 @@ canvas{display:block;width:100%;height:100%}
       </div>
     </section>
 
-    <!-- 정량 분석이란? (빈칸 + 그래프 판서) -->
-    <section class="slide" data-title="정량 분석의 과정" data-id="quantdef">
+    <!-- 정량 분석이란? ① 정의와 과정 -->
+    <section class="slide" data-title="정량 분석이란?" data-id="quantdef1">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <h2>정량 분석이란?</h2>
-        <div class="btn-row"><button class="btn soft" id="qdAll">정답 모두 보기</button><button class="btn ghost" id="qdHide">빈칸 되돌리기</button></div>
+        <div class="btn-row"><button class="btn soft qd-all">정답 보기</button><button class="btn ghost qd-hide">빈칸 되돌리기</button></div>
       </div>
-      <p class="qd-text">정량 분석이란 시료에 포함된 성분의 양을 파악하기 위해 하는 분석법이다. 정량 분석의 과정은 다음과 같다.</p>
-      <p class="qd-text" style="text-align:center;font-size:26px">( <button class="blank" data-a="표준 용액"></button> ) 만들기 → ( <button class="blank" data-a="검정선"></button> ) 그리기 → ( <button class="blank" data-a="미지 시료"></button> ) 농도 구하기</p>
-      <div class="row" style="flex:1;min-height:0;gap:30px">
-        <div class="col" style="flex:1.05;gap:18px">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:60px">
+        <p class="qd-big">정량 분석이란 시료에 포함된 <b>성분의 양</b>을 파악하기 위해 하는 분석법이다. 정량 분석의 과정은 다음과 같다.</p>
+        <div class="qd-flow">
+          <div>( <button class="blank" data-a="표준 용액"></button> ) 만들기</div><i>→</i>
+          <div>( <button class="blank" data-a="검정선"></button> ) 그리기</div><i>→</i>
+          <div>( <button class="blank" data-a="미지 시료"></button> ) 농도 구하기</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 정량 분석이란? ② 표·검정선·그래프 -->
+    <section class="slide" data-title="검정선 그리기" data-id="quantdef">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h2>검정선 그리기</h2>
+        <div class="btn-row"><button class="btn soft qd-all">정답 보기</button><button class="btn ghost qd-hide">빈칸 되돌리기</button><button class="btn ghost" id="qdAns">정답 그래프</button></div>
+      </div>
+      <div class="row" style="flex:1;min-height:0;gap:26px;margin-top:8px">
+        <div class="col qd-left" style="flex:1.1;gap:20px;justify-content:center">
           <table class="qd-table">
-            <tr><th></th><th>농도</th><th>농도에 따른<br>신호값</th></tr>
+            <tr><th></th><th>농도</th><th>신호값</th></tr>
             <tr><td>표준 용액 Ⅰ</td><td>0.1</td><td>4</td></tr>
             <tr><td>표준 용액 Ⅱ</td><td>0.2</td><td>8</td></tr>
             <tr><td>표준 용액 Ⅲ</td><td>0.3</td><td>12</td></tr>
           </table>
-          <p class="qd-text" style="margin:0">검정선의 식: <i>y</i> = ( <button class="blank sm" data-a="40"></button> )<i>x</i> + ( <button class="blank sm" data-a="0"></button> )</p>
+          <p class="qd-eq">검정선의 식: <i>y</i> = (<button class="blank sm" data-a="40"></button>)<i>x</i> + (<button class="blank sm" data-a="0"></button>)</p>
           <table class="qd-table">
-            <tr><th></th><th>농도</th><th>농도에 따른<br>신호값</th></tr>
+            <tr><th></th><th>농도</th><th>신호값</th></tr>
             <tr><td>미지 시료</td><td><button class="blank sm" data-a="0.25"></button></td><td>10</td></tr>
           </table>
         </div>
-        <div class="card" style="flex:1;padding:8px 10px;min-height:0;display:flex;flex-direction:column">
-          <svg id="qdGraph" viewBox="0 0 600 470" style="flex:1;min-height:0;width:100%;display:block"></svg>
-          <div class="btn-row" style="justify-content:space-between;align-items:center">
-            <span class="muted" style="font-size:16px">✏️ 위쪽 <b>판서</b> 버튼을 눌러 그래프를 직접 그려 보세요.</span>
-            <button class="btn ghost" id="qdAns" style="padding:6px 14px;font-size:16px">정답 그래프</button>
-          </div>
-        </div>
+        <div class="card" style="flex:1;padding:6px 8px;min-height:0"><svg id="qdGraph" viewBox="0 0 600 560" style="width:100%;height:100%;display:block"></svg></div>
       </div>
     </section>
 
@@ -695,7 +710,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v16 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v17 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -1847,7 +1862,9 @@ const SVGNS = "http://www.w3.org/2000/svg";
     const m1 = +a.value, m2 = +b.value, sol = m1 + m2, pct = sol ? m1 / sol * 100 : 0;
     document.getElementById("pctSoluteOut").textContent = m1 + " g";
     document.getElementById("pctSolventOut").textContent = m2 + " g";
-    document.getElementById("pctCalc").innerHTML = `용액의 질량 = ${m1} + ${m2} = <b>${sol} g</b><br>퍼센트 농도 = ${m1} ÷ ${sol} × 100 = <b style="color:var(--accent);font-size:32px">${pct.toFixed(1)} %</b>`;
+    document.getElementById("pctCalc").innerHTML = `용액의 질량 = ${m1} + ${m2} = <b>${sol} g</b>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">퍼센트 농도 =
+        <span class="frac" style="font-size:26px"><span>${m1} g</span><span>${sol} g</span></span> × 100 = <b style="color:var(--accent);font-size:34px">${pct.toFixed(1)} %</b></div>`;
   }
   a.oninput = upd; b.oninput = upd; upd();
 })();
@@ -1976,29 +1993,30 @@ const SVGNS = "http://www.w3.org/2000/svg";
 
 /* ================= 정량 분석이란? (빈칸 + 그래프) ================= */
 (function () {
-  const slide = document.querySelector('[data-id="quantdef"]');
-  const blanks = [...slide.querySelectorAll(".blank")];
-  blanks.forEach(b => { b.textContent = b.dataset.a; b.onclick = () => b.classList.toggle("show"); });
-  document.getElementById("qdAll").onclick = () => blanks.forEach(b => b.classList.add("show"));
-  document.getElementById("qdHide").onclick = () => { blanks.forEach(b => b.classList.remove("show")); showAns = false; graph(); };
+  document.querySelectorAll('[data-id="quantdef1"], [data-id="quantdef"]').forEach(slide => {
+    const blanks = [...slide.querySelectorAll(".blank")];
+    blanks.forEach(b => { b.textContent = b.dataset.a; b.onclick = () => b.classList.toggle("show"); });
+    slide.querySelector(".qd-all").onclick = () => blanks.forEach(b => b.classList.add("show"));
+    slide.querySelector(".qd-hide").onclick = () => { blanks.forEach(b => b.classList.remove("show")); if (slide.dataset.id === "quantdef") { showAns = false; graph(); } };
+  });
   const svg = document.getElementById("qdGraph");
   let showAns = false;
-  const X0 = 90, Y0 = 400, XW = 460, YH = 360, X = c => X0 + c / 0.4 * XW, Y = v => Y0 - v / 14 * YH;
+  const X0 = 120, Y0 = 470, XW = 450, YH = 430, X = c => X0 + c / 0.4 * XW, Y = v => Y0 - v / 14 * YH;
   function graph() {
     let h = `<rect x="${X0}" y="${Y(14)}" width="${XW}" height="${YH}" fill="#fff"/>`;
     for (let c = 0.05; c < 0.4; c += 0.05) h += `<line x1="${X(c)}" y1="${Y(14)}" x2="${X(c)}" y2="${Y0}" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="2 4"/>`;
     for (let v = 2; v <= 14; v += 2) h += `<line x1="${X0}" y1="${Y(v)}" x2="${X0 + XW}" y2="${Y(v)}" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="2 4"/>`;
     h += `<line x1="${X0}" y1="${Y(14)}" x2="${X0}" y2="${Y0}" stroke="#1b2234" stroke-width="3"/><line x1="${X0}" y1="${Y0}" x2="${X0 + XW}" y2="${Y0}" stroke="#1b2234" stroke-width="3"/>`;
-    [4, 8, 12].forEach(v => h += `<text x="${X0 - 14}" y="${Y(v) + 9}" text-anchor="end" font-size="26" fill="#1b2234">${v}</text>`);
-    [0.1, 0.2, 0.3].forEach(c => h += `<text x="${X(c)}" y="${Y0 + 36}" text-anchor="middle" font-size="26" fill="#1b2234">${c}</text>`);
-    h += `<text x="${X0 + XW}" y="${Y0 + 64}" text-anchor="end" font-size="26" fill="#1b2234">농도</text>
-      <text font-size="26" fill="#1b2234" text-anchor="middle"><tspan x="30" y="${Y(13)}">신</tspan><tspan x="30" y="${Y(13) + 30}">호</tspan><tspan x="30" y="${Y(13) + 60}">값</tspan></text>`;
+    [4, 8, 12].forEach(v => h += `<text x="${X0 - 14}" y="${Y(v) + 14}" text-anchor="end" font-size="40" fill="#1b2234">${v}</text>`);
+    [0.1, 0.2, 0.3].forEach(c => h += `<text x="${X(c)}" y="${Y0 + 44}" text-anchor="middle" font-size="40" fill="#1b2234">${c}</text>`);
+    h += `<text x="${X0 + XW}" y="${Y0 + 86}" text-anchor="end" font-size="38" fill="#1b2234">농도</text>
+      <text font-size="38" fill="#1b2234" text-anchor="middle"><tspan x="28" y="${Y(13)}">신</tspan><tspan x="28" y="${Y(13) + 42}">호</tspan><tspan x="28" y="${Y(13) + 84}">값</tspan></text>`;
     if (showAns) {
       h += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0.35)}" y2="${Y(14)}" stroke="#4338ca" stroke-width="3"/>`;
       [[0.1, 4], [0.2, 8], [0.3, 12]].forEach(([c, v]) => h += `<circle cx="${X(c)}" cy="${Y(v)}" r="9" fill="#1b2234"/>`);
       h += `<path d="M${X0} ${Y(10)} H${X(0.25)} V${Y0}" fill="none" stroke="#c62828" stroke-width="3" stroke-dasharray="8 6"/><circle cx="${X(0.25)}" cy="${Y(10)}" r="9" fill="#c62828"/>
-        <text x="${X(0.25) + 12}" y="${Y0 - 12}" font-size="22" font-weight="800" fill="#c62828">0.25</text>
-        <text x="${X(0.06)}" y="${Y(12.6)}" font-size="22" font-weight="800" fill="#4338ca">y = 40x</text>`;
+        <text x="${X(0.25) + 12}" y="${Y0 - 14}" font-size="34" font-weight="800" fill="#c62828">0.25</text>
+        <text x="${X(0.03)}" y="${Y(12.4)}" font-size="34" font-weight="800" fill="#4338ca">y = 40x</text>`;
     }
     svg.innerHTML = h;
     document.getElementById("qdAns").textContent = showAns ? "정답 그래프 숨기기" : "정답 그래프";
