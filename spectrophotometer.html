@@ -21,6 +21,28 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 #fsBtn:hover{background:var(--accent-2)}
 select{font:inherit}
 
+/* zoomable card */
+.zoom-btn{position:absolute;top:16px;right:18px;border:2px solid var(--accent-2);background:#fff;color:var(--accent);border-radius:10px;padding:6px 14px;font-size:17px;font-weight:800;z-index:2}
+.zoomable{position:relative}
+.zoomable.zoomed{position:fixed;left:40px;right:40px;top:76px;bottom:74px;z-index:40;box-shadow:0 0 0 3000px rgba(27,34,52,.55)}
+.zoomed #quantTubes{gap:70px!important;margin:16px 0 20px!important}
+.zoomed #quantTubes .tube{width:120px;height:370px;border-radius:0 0 60px 60px;border-width:4px}
+.zoomed .tube-wrap .name{font-size:44px}
+.zoomed .tube-wrap .val{font-size:32px;height:42px}
+.zoomed h3{font-size:34px}
+/* rgb slide */
+.rgb-chips{display:flex;gap:10px}
+.chip{flex:1;display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:19px;font-weight:700;background:#fff;color:var(--ink)}
+.chip .dot{width:24px;height:24px;border-radius:50%;border:2px solid #111;flex:none}
+.chip .st{margin-left:auto;font-size:16px;padding:3px 10px;border-radius:999px;background:var(--good-soft);color:var(--good)}
+.chip.off{background:#f3f4f8;color:var(--muted)}
+.chip.off .dot{opacity:.35}
+.chip.off .st{background:var(--bad-soft);color:var(--bad)}
+#rgbPresets .btn{padding:8px 12px;font-size:17px}
+#rgbPresets .btn.on{background:var(--accent);color:#fff}
+.res-line{font-size:21px;line-height:1.6;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.res-sw{display:inline-block;width:34px;height:34px;border-radius:8px;border:2px solid #111;vertical-align:middle}
+
 /* top bar */
 .topbar{height:58px;flex:none;display:flex;align-items:center;gap:16px;padding:0 28px;background:var(--panel);border-bottom:1px solid var(--line)}
 .topbar .brand{font-weight:800;font-size:20px;color:var(--accent);display:flex;align-items:center;gap:10px}
@@ -247,7 +269,8 @@ canvas{display:block;width:100%;height:100%}
           </div>
           <div class="callout info" id="quantMsg">오른쪽 시험관들을 보고, 진한 순서와 정확한 농도를 맞혀 보세요.</div>
         </div>
-        <div class="card col" style="flex:1;align-items:center;justify-content:center">
+        <div class="card col zoomable" id="quantCard" style="flex:1;align-items:center;justify-content:center">
+          <button class="zoom-btn" id="quantZoom">⛶ 크게 보기</button>
           <h3 style="align-self:flex-start">눈으로 농도를 맞힐 수 있을까?</h3>
           <p class="muted" style="align-self:flex-start">황산 구리(Ⅱ) 수용액 5개 (순서는 무작위)</p>
           <div id="quantTubes" style="display:flex;gap:26px;margin:24px 0 18px"></div>
@@ -259,9 +282,32 @@ canvas{display:block;width:100%;height:100%}
       </div>
     </section>
 
-    <!-- 3. 빛의 색과 보색 -->
-    <section class="slide" data-title="빛의 색과 보색" data-id="wheel">
-      <h2>용액은 왜 색을 띨까? <small>빛의 흡수와 보색</small></h2>
+    <!-- 3. 빛의 삼원색과 물체의 색 -->
+    <section class="slide" data-title="빛과 물체의 색" data-id="rgb">
+      <h2>물체와 용액은 왜 색을 띨까? <small>빛의 삼원색 · 반사 · 흡수 · 투과</small></h2>
+      <p class="lead">눈에 보이는 색은 물체에서 <b>반사</b>되거나 용액을 <b>투과</b>해 눈에 들어온 빛의 색입니다. 나머지 빛은 <b>흡수</b>됩니다.</p>
+      <div class="row" style="flex:1">
+        <div class="card col" style="flex:1.3;gap:10px;padding:16px 20px">
+          <div class="row" style="gap:12px;align-items:center">
+            <div class="seg" id="rgbMode" style="width:300px;flex:none"><button data-m="reflect" class="on">물체 (반사)</button><button data-m="transmit">용액 (투과)</button></div>
+            <div class="btn-row" id="rgbPresets" style="flex:1;gap:6px"></div>
+          </div>
+          <div style="flex:1;min-height:0"><svg id="rgbScene" viewBox="0 0 780 380" style="width:100%;height:100%;display:block"></svg></div>
+          <div class="rgb-chips" id="rgbChips"></div>
+        </div>
+        <div class="col" style="flex:1">
+          <div class="card" style="padding:12px 14px;flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="font-weight:800;font-size:20px;margin:2px 6px 4px">빛의 삼원색 <span class="muted" style="font-weight:600;font-size:17px">— 원을 눌러 빛을 켜고 끄세요</span></div>
+            <svg id="rgbVenn" viewBox="0 0 420 320" style="flex:1;min-height:0;width:100%;display:block"></svg>
+          </div>
+          <div class="card" id="rgbResult" style="padding:12px 20px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 빛의 색과 보색 -->
+    <section class="slide" data-title="흡수 파장과 보색" data-id="wheel">
+      <h2>흡수하는 빛의 파장과 용액의 색 <small>보색</small></h2>
       <p class="lead">용액은 특정 색의 빛을 <b>흡수</b>하고, 나머지 빛이 우리 눈에 들어와 <b>보색</b>으로 보입니다.</p>
       <div class="row" style="flex:1">
         <div class="chart" style="width:520px;flex:none"><canvas id="wheelCanvas"></canvas></div>
@@ -673,6 +719,7 @@ slides.forEach((s, i) => {
 });
 function go(i) {
   i = Math.max(0, Math.min(slides.length - 1, i));
+  window.closeQuantZoom?.();
   slides[cur].classList.remove("active"); cur = i; slides[cur].classList.add("active");
   [...dots.children].forEach((d, k) => d.classList.toggle("on", k === cur));
   [...tocList.children].forEach((d, k) => d.classList.toggle("on", k === cur));
@@ -780,7 +827,7 @@ document.getElementById("titleTubes").innerHTML =
 
 /* ================= 2. 정량분석 ================= */
 (function () {
-  const concs = [0.05, 0.1, 0.2, 0.3, 0.4];
+  const concs = [0.02, 0.04, 0.06, 0.08, 0.1];
   let order = [], revealed = false;
   const wrap = document.getElementById("quantTubes");
   function shuffle() {
@@ -793,6 +840,11 @@ document.getElementById("titleTubes").innerHTML =
     wrap.innerHTML = order.map((c, i) => `<div class="tube-wrap"><div class="name">${"ABCDE"[i]}</div>${tubeHTML(solColor("cuso4", c, TUBE_B))}<div class="val">${revealed ? c.toFixed(2) + " M" : "? M"}</div></div>`).join("");
   }
   document.getElementById("quantShuffle").onclick = shuffle;
+  const qc = document.getElementById("quantCard"), qz = document.getElementById("quantZoom");
+  const setZoom = on => { qc.classList.toggle("zoomed", on); qz.textContent = on ? "✕ 닫기" : "⛶ 크게 보기"; };
+  qz.onclick = () => setZoom(!qc.classList.contains("zoomed"));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") setZoom(false); });
+  window.closeQuantZoom = () => setZoom(false);
   document.getElementById("quantReveal").onclick = () => {
     revealed = true; draw();
     const m = document.getElementById("quantMsg");
@@ -802,7 +854,99 @@ document.getElementById("titleTubes").innerHTML =
   shuffle();
 })();
 
-/* ================= 3. 색상환 ================= */
+/* ================= 3. 빛의 삼원색 · 반사/흡수/투과 ================= */
+(function () {
+  const KEYS = ["r", "g", "b"], NAME = { r: "빨강", g: "초록", b: "파랑" };
+  const ARW = { r: "#f03030", g: "#2fd94a", b: "#2152ff" };
+  const MIXNAME = { "": "검은색", r: "빨간색", g: "초록색", b: "파란색", rg: "노란색", rb: "자홍색", gb: "청록색", rgb: "흰색" };
+  const PRESETS = {
+    reflect: [["빨간 물체", "r"], ["초록 물체", "g"], ["파란 물체", "b"], ["노란 물체", "rg"], ["검은 물체", ""], ["흰 물체", "rgb"]],
+    transmit: [["황산 구리 용액", "gb"], ["KMnO₄ 용액", "rb"], ["노란 용액", "rg"], ["물 (무색)", "rgb"]],
+  };
+  const st = { mode: "reflect", on: { r: true, g: false, b: false } };
+  const key = o => KEYS.filter(k => o[k]).join("");
+  const mixRGB = o => `rgb(${o.r ? 255 : 0},${o.g ? 255 : 0},${o.b ? 255 : 0})`;
+  function arrow(x1, y1, x2, y2, col) {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+    const w = 9, hw = 21, hl = 30, bx = x2 - ux * hl, by = y2 - uy * hl;
+    const P = [[x1 + nx * w, y1 + ny * w], [bx + nx * w, by + ny * w], [bx + nx * hw, by + ny * hw], [x2, y2], [bx - nx * hw, by - ny * hw], [bx - nx * w, by - ny * w], [x1 - nx * w, y1 - ny * w]];
+    return `<polygon points="${P.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ")}" fill="${col}" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>`;
+  }
+  const burst = (x, y) => `<g transform="translate(${x},${y})">${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="0" y1="0" x2="${(14 * Math.cos(a * Math.PI / 180)).toFixed(1)}" y2="${(14 * Math.sin(a * Math.PI / 180)).toFixed(1)}" stroke="#111" stroke-width="2.5"/>`).join("")}</g>`;
+  function scene() {
+    const o = st.on, k = key(o);
+    let h = `<text x="20" y="34" font-size="22" font-weight="800" fill="#1b2234">백색광 (빨강 + 초록 + 파랑)</text>`;
+    if (st.mode === "reflect") {
+      const fill = k === "" ? "#141414" : mixRGB(o);
+      h += `<path d="M120 262 L120 314 A250 34 0 0 0 620 314 L620 262 Z" fill="${fill}" stroke="#111" stroke-width="3"/>
+            <ellipse cx="370" cy="262" rx="250" ry="34" fill="${fill}" stroke="#111" stroke-width="3"/>
+            <ellipse cx="370" cy="262" rx="250" ry="34" fill="rgba(255,255,255,.18)"/>`;
+      const xs = { r: 290, g: 365, b: 440 }, hy = 258;
+      KEYS.forEach(c => { h += arrow(xs[c] - 205, hy - 205, xs[c], hy, ARW[c]); });
+      KEYS.forEach(c => { if (o[c]) h += arrow(xs[c], hy, xs[c] + 205, hy - 205, ARW[c]); else h += burst(xs[c], hy + 2); });
+      h += `<text x="742" y="40" font-size="34" text-anchor="middle">👁</text><text x="742" y="74" font-size="17" text-anchor="middle" fill="#5a6478">눈</text>`;
+      h += `<text x="370" y="368" font-size="19" text-anchor="middle" fill="#5a6478">반사된 빛만 눈에 들어옴 · 나머지는 흡수(✳)</text>`;
+    } else {
+      const ys = { r: 150, g: 210, b: 270 };
+      KEYS.forEach(c => { h += o[c] ? arrow(30, ys[c], 690, ys[c], ARW[c]) : arrow(30, ys[c], 395, ys[c], ARW[c]); });
+      const liq = k === "rgb" ? "rgba(225,240,255,.55)" : (() => { const c = colorOf(l => { let a = 0; if (!o.r) a += 1.6 * gs(l, 640, 45); if (!o.g) a += 1.6 * gs(l, 530, 35); if (!o.b) a += 1.6 * gs(l, 450, 30); return a; }); return c.replace("rgb", "rgba").replace(")", ",.72)"); })();
+      h += `<rect x="330" y="104" width="140" height="222" rx="4" fill="${liq}"/><rect x="322" y="70" width="156" height="262" rx="8" fill="none" stroke="#7b8599" stroke-width="6"/>`;
+      KEYS.forEach(c => { if (!o[c]) h += burst(405, ys[c]); });
+      h += `<text x="742" y="${ys.g + 12}" font-size="34" text-anchor="middle">👁</text>`;
+      h += `<text x="400" y="368" font-size="19" text-anchor="middle" fill="#5a6478">투과한 빛만 눈에 들어옴 · 나머지는 용액이 흡수(✳)</text>`;
+    }
+    document.getElementById("rgbScene").innerHTML = h;
+  }
+  function venn() {
+    const C = { r: [210, 118], g: [152, 218], b: [268, 218] }, R = 100;
+    let h = `<rect x="0" y="0" width="420" height="320" rx="16" fill="#0b0f1a"/><g style="isolation:isolate">`;
+    KEYS.forEach(c => {
+      h += st.on[c] ? `<circle data-c="${c}" cx="${C[c][0]}" cy="${C[c][1]}" r="${R}" fill="${["#ff0000", "#00ff00", "#0000ff"][KEYS.indexOf(c)]}" style="mix-blend-mode:screen;cursor:pointer"/>`
+                    : `<circle data-c="${c}" cx="${C[c][0]}" cy="${C[c][1]}" r="${R}" fill="rgba(255,255,255,.02)" stroke="#5a6478" stroke-width="2" stroke-dasharray="7 6" style="cursor:pointer"/>`;
+    });
+    h += `</g>`;
+    const L = [["빨강", 210, 62, "r"], ["초록", 108, 262, "g"], ["파랑", 312, 262, "b"], ["노랑", 165, 152, "rg"], ["자홍", 255, 152, "rb"], ["청록", 210, 252, "gb"], ["흰색", 210, 190, "rgb"]];
+    L.forEach(([t, x, y, need]) => {
+      const lit = [...need].every(c => st.on[c]);
+      h += `<text x="${x}" y="${y}" text-anchor="middle" font-size="${need.length === 1 ? 22 : 19}" font-weight="800" fill="${lit ? (need === "rgb" || need === "rg" || need === "gb" || need === "g" ? "#111" : "#fff") : "#5a6478"}" style="pointer-events:none">${t}</text>`;
+    });
+    const v = document.getElementById("rgbVenn"); v.innerHTML = h;
+  }
+  function result() {
+    const o = st.on, k = key(o), ab = KEYS.filter(c => !o[c]), abk = ab.join("");
+    const verb = st.mode === "reflect" ? "반사" : "투과";
+    const seen = k === "" ? "없음" : KEYS.filter(c => o[c]).map(c => NAME[c]).join(" + ");
+    let seenName = MIXNAME[k]; if (st.mode === "transmit" && k === "rgb") seenName = "무색 투명";
+    let note;
+    if (k === "") note = "모든 빛을 흡수 → <b>검은색</b>";
+    else if (k === "rgb") note = st.mode === "reflect" ? "모든 빛을 반사 → <b>흰색</b>" : "모든 빛을 투과 → <b>무색 투명</b>";
+    else note = `흡수된 빛(<b>${MIXNAME[abk].replace("색", "")}</b>)과 보이는 색(<b>${MIXNAME[k].replace("색", "")}</b>)은 <b class="hl">보색</b> 관계`;
+    document.getElementById("rgbResult").innerHTML =
+      `<div class="res-line">${verb}된 빛: <b>${seen}</b> → <span class="res-sw" style="background:${k === "" ? "#141414" : mixRGB(o)}"></span><b style="font-size:24px">${seenName}</b></div>
+       <div class="res-line">흡수된 빛: <b>${ab.length ? ab.map(c => NAME[c]).join(" + ") : "없음"}</b></div>
+       <div class="res-line" style="margin-top:4px">${note}</div>
+       <div class="res-line muted" style="font-size:18px">보색: 빨강 ↔ 청록 · 초록 ↔ 자홍 · 파랑 ↔ 노랑</div>`;
+  }
+  function chips() {
+    const verb = st.mode === "reflect" ? "반사" : "투과";
+    document.getElementById("rgbChips").innerHTML = KEYS.map(c =>
+      `<button class="chip ${st.on[c] ? "" : "off"}" data-c="${c}"><span class="dot" style="background:${ARW[c]}"></span>${NAME[c]} 빛<span class="st">${st.on[c] ? verb : "흡수"}</span></button>`).join("");
+    const pk = key(st.on);
+    document.getElementById("rgbPresets").innerHTML = PRESETS[st.mode].map(([t, v]) => `<button class="btn soft ${v === pk ? "on" : ""}" data-v="${v}">${t}</button>`).join("");
+  }
+  function all() { scene(); venn(); result(); chips(); }
+  const toggle = c => { st.on[c] = !st.on[c]; all(); };
+  document.getElementById("rgbChips").onclick = e => { const b = e.target.closest(".chip"); if (b) toggle(b.dataset.c); };
+  document.getElementById("rgbVenn").onclick = e => { const c = e.target.closest("circle"); if (c) toggle(c.dataset.c); };
+  document.getElementById("rgbPresets").onclick = e => { const b = e.target.closest("button"); if (!b) return; KEYS.forEach(c => st.on[c] = b.dataset.v.includes(c)); all(); };
+  document.querySelectorAll("#rgbMode button").forEach(b => b.onclick = () => {
+    st.mode = b.dataset.m; document.querySelectorAll("#rgbMode button").forEach(x => x.classList.toggle("on", x === b));
+    const first = PRESETS[st.mode][0][1]; KEYS.forEach(c => st.on[c] = first.includes(c)); all();
+  });
+  all();
+})();
+
+/* ================= 4. 색상환 ================= */
 (function () {
   const SECT = [
     { n: "빨강", c: "#e53935", r: "620~700" }, { n: "주황", c: "#fb8c00", r: "590~620" }, { n: "노랑", c: "#fdd835", r: "570~590" },
