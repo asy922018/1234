@@ -501,7 +501,10 @@ canvas{display:block;width:100%;height:100%}
           <span class="tag" id="qScore"></span>
         </div>
         <div class="qtext" id="qText"></div>
-        <div class="opts" id="qOpts"></div>
+        <div style="display:flex;gap:24px;align-items:stretch">
+          <div class="chart" id="qGraphBox" style="display:none;width:560px;height:340px;flex:none"><canvas id="qGraph"></canvas></div>
+          <div class="opts" id="qOpts" style="flex:1"></div>
+        </div>
         <div class="explain" id="qExplain"></div>
         <div class="btn-row" style="justify-content:space-between;margin-top:10px">
           <button class="btn ghost" id="qPrev">◀ 이전 문제</button>
@@ -532,7 +535,7 @@ canvas{display:block;width:100%;height:100%}
   <footer class="navbar">
     <button class="navbtn" id="prevBtn">◀ 이전</button>
     <div id="dots"></div>
-    <span style="font-size:14px;color:#9aa3b5" title="버전">v11 · 11.26</span>
+    <span style="font-size:14px;color:#9aa3b5" title="버전">v12 · 11.26</span>
     <span id="pageNum"></span>
     <button class="navbtn" id="nextBtn">다음 ▶</button>
   </footer>
@@ -1549,7 +1552,7 @@ function Instrument(host) {
     { q: "같은 큐벳과 같은 파장에서 용액의 농도를 <b>2배</b>로 하면 흡광도는?", o: ["절반이 된다", "변하지 않는다", "2배가 된다", "4배가 된다"], a: 2, e: "람베르트–비어 법칙 A = εbc 에서 ε, b가 같으면 A는 c에 비례합니다." },
     { q: "어떤 용액의 투과도(T)가 <b>10%</b>일 때 흡광도(A)는?", o: ["0.1", "1", "10", "90"], a: 1, e: "A = −log T = −log 0.10 = 1" },
     { q: "용액의 농도가 진해질 때 흡수 스펙트럼에서 <b>변하지 않는</b> 것은?", o: ["λmax의 위치", "봉우리의 높이", "λmax에서의 흡광도", "λmax에서의 투과도"], a: 0, e: "농도가 변하면 봉우리의 높이(흡광도)는 비례해서 변하지만, λmax의 위치와 스펙트럼 모양은 그대로입니다." },
-    { q: "검량선이 A = 2.4c (c 단위: mM)일 때, 미지 시료의 흡광도가 0.60이면 농도는?", o: ["0.25 mM", "0.40 mM", "1.44 mM", "4.0 mM"], a: 0, e: "c = A ÷ 2.4 = 0.60 ÷ 2.4 = 0.25 mM" },
+    { graph: true, q: "다음 검량선(A = 2.4c, c 단위: mM)에서 미지 시료의 흡광도가 0.60이면 농도는?", o: ["0.25 mM", "0.40 mM", "1.44 mM", "4.0 mM"], a: 0, e: "c = A ÷ 2.4 = 0.60 ÷ 2.4 = 0.25 mM" },
   ];
   let i = 0; const ans = Q.map(() => null);
   const opts = document.getElementById("qOpts");
@@ -1562,11 +1565,32 @@ function Instrument(host) {
       let cls = ""; if (ans[i] !== null) { if (k === it.a) cls = "correct"; else if (k === ans[i]) cls = "wrong"; }
       return `<button class="opt ${cls}" data-k="${k}"><span class="n">${"①②③④"[k]}</span>${t}</button>`;
     }).join("");
+    const gb = document.getElementById("qGraphBox");
+    gb.style.display = it.graph ? "block" : "none";
+    opts.style.gridTemplateColumns = it.graph ? "1fr" : "";
+    opts.querySelectorAll(".opt").forEach(b => b.style.padding = it.graph ? "12px 20px" : "");
+    if (it.graph) requestAnimationFrame(() => graph(ans[i] !== null));
     const ex = document.getElementById("qExplain");
     ex.className = "explain" + (ans[i] === null ? "" : " callout " + (ans[i] === it.a ? "good" : ""));
     ex.innerHTML = ans[i] === null ? "" : `<b>${ans[i] === it.a ? "⭕ 정답!" : "❌ 아쉬워요."}</b> ${it.e}`;
     document.getElementById("qPrev").disabled = i === 0;
     document.getElementById("qNext").disabled = i === Q.length - 1;
+  }
+  // 7번 문제용 검량선 그래프
+  function graph(answered) {
+    const cv = document.getElementById("qGraph"); if (!cv.clientWidth) return;
+    const { ctx, w, h } = prep(cv);
+    const box = { x: 86, y: 26, w: w - 112, h: h - 100 };
+    const ax = axes(ctx, box, [0, 0.55], [0, 1.4], { xStep: 0.1, yStep: 0.2, xFmt: v => +v.toFixed(1), yFmt: v => +v.toFixed(1), xLabel: "농도 c (mM)", yLabel: "흡광도 A" });
+    ctx.save(); ctx.beginPath(); ctx.rect(box.x, box.y, box.w, box.h); ctx.clip();
+    ctx.strokeStyle = "#4338ca"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ax.X(0), ax.Y(0)); ctx.lineTo(ax.X(0.55), ax.Y(2.4 * 0.55)); ctx.stroke(); ctx.restore();
+    [0.1, 0.2, 0.3, 0.4, 0.5].forEach(c => { ctx.beginPath(); ctx.arc(ax.X(c), ax.Y(2.4 * c), 7, 0, 7); ctx.fillStyle = "#1b2234"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); });
+    label(ctx, "A = 2.4c", ax.X(0.43), ax.Y(2.4 * 0.43) - 30, { bg: "#4338ca", size: 16, align: "right" });
+    const ya = ax.Y(0.6), xc = ax.X(0.25);
+    ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = "#c62828"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(box.x, ya); ctx.lineTo(answered ? xc : box.x + box.w, ya);
+    if (answered) ctx.lineTo(xc, box.y + box.h); ctx.stroke(); ctx.restore();
+    label(ctx, "미지 시료 A = 0.60", box.x + box.w - 6, ya - 20, { bg: "#c62828", size: 15, align: "right" });
+    if (answered) { ctx.beginPath(); ctx.arc(xc, ya, 8, 0, 7); ctx.fillStyle = "#c62828"; ctx.fill(); label(ctx, "c = 0.25 mM", xc + 10, box.y + box.h - 18, { bg: "#c62828", size: 15 }); }
   }
   opts.onclick = e => { const b = e.target.closest(".opt"); if (!b || ans[i] !== null) return; ans[i] = +b.dataset.k; draw(); };
   document.getElementById("qPrev").onclick = () => { i--; draw(); };
